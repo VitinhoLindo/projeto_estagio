@@ -4,12 +4,10 @@
 </template>
 
 <script>
-import HelloWorld from '@/components/HelloWorld.vue'
+import LanguageMixin from '../mixins/Language'
 
 export default {
   name: 'Home',
-  components: {
-    HelloWorld
-  }
+  mixins: [LanguageMixin],
 }
 </script>

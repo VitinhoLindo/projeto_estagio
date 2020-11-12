@@ -1,6 +1,6 @@
-import Window from './Window'
+import MyEvent from './MyEvent' 
 
-class AppCrypto extends Window {
+class AppCrypto extends MyEvent {
   constructor() { super(); }
 }
 

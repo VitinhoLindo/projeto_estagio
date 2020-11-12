@@ -1,6 +1,6 @@
-import MyEvent from './MyEvent'
+import MyRequest from './MyRequest'
 
-class MyWindow extends MyEvent {
+class MyWindow extends MyRequest {
   constructor() { super(); }
 }
 

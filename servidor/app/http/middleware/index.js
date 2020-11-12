@@ -1,0 +1,202 @@
+const express = require('express');
+
+class Middlaware {
+  options = {
+    maxRequest: 20,
+    interval: 60000,
+    cache: {}
+  }
+  routeRules = {}
+
+  constructor() { }
+
+  currentTime(date = new Date()) {
+    return date.getTime();
+  }
+
+  serverError() {
+    return {
+      code: 500,
+      message: 'Server Error',
+      currentTime: this.currentTime(),
+      result: {},
+      status: 'error'
+    }
+  }
+
+  openToRequest(remoteAddress = '') {
+    if (!remoteAddress) return false;
+
+    return this.options.cache[remoteAddress] == this.options.maxRequest ? false : true;
+  }
+
+  newRequest(remoteAddress = '') {
+    if (!remoteAddress) return;
+
+    let count = this.options.cache[remoteAddress] || 0;
+    count++;
+    this.options.cache[remoteAddress] = count;
+  }
+
+  clearCache() {
+    this.options.cache = {};
+  }
+
+  getUrl(url = '/') {
+    return url.toLowerCase();
+  }
+
+  getMethod(method = 'GET') {
+    return method.toUpperCase();
+  }
+
+  addRule(url, method, rule) {
+    url = this.getUrl(url);
+    method = this.getMethod(method);
+
+    if (!this.routeRules[url]) {
+      this.routeRules[url] = { functions: [] };
+    }
+    if (!this.routeRules[url][method]) {
+      this.routeRules[url][method] = [];
+    }
+
+    this.routeRules[url][method].push(rule);
+  }
+
+  addMiddlaware(url, method, func) {
+    url = this.getUrl(url);
+    method = this.getMethod(method);
+    if (!this.routeRules[url]) {
+      this.routeRules[url] = { functions: [] };
+    }
+    this.routeRules[url].functions.push({ method: method, call: func });
+  }
+
+  getSecondUsingMinute(time) {
+    time = parseInt(time) || 1;
+    return time * 60;
+  }
+
+  getMillisecondsUsingSecond(time) {
+    time = parseFloat(time) || 1;
+    return time * 1000;
+  }
+
+  setMaxRequests(value) {
+    this.options.maxRequest = parseInt(value) || 20;
+  }
+
+  setTimeListenUsingMinute(time = 1) {
+    time = this.getSecondUsingMinute(time);
+    time = this.getMillisecondsUsingSecond(time);
+
+    this.options.interval = time;
+  }
+
+  listen() {
+    setInterval(() => {
+      this.clearCache();
+    }, this.options.interval);
+  }
+
+  validate(request = express.request, response = express.response, next) {
+    try {
+      let url = this.getUrl(request.url.search(/\?/g) >= 0 ? request.url.split(/\?/g)[0] : request.url);
+      let method = this.getMethod(request.method);
+
+      if (!this.openToRequest(request.socket.remoteAddress)) {
+        response.status(429);
+        return response.end();
+      }
+      this.newRequest(request.socket.remoteAddress);
+
+      let rule = this.routeRules[url];
+      if (!rule) return next();
+
+      if (rule[method]) {
+        
+      }
+      if (rule.functions) {
+        for (let _func of rule.functions) {
+          if (_func.method = method) {
+            _func.call(request,response, next);
+          }
+        }
+      }
+      next();
+    } catch (error) {
+      console.log(error);
+      response.status(500);
+      return response.end();
+    }
+  }
+
+  static get() {
+    return new Middlaware();
+  }
+}
+// const middlaware = function () {
+
+
+  // return {
+  //   listen: function (time) {
+  //     let minute = parseFloat(time) || 1;
+  //     let secconds = minute * 60;
+  //     let millisecconds = secconds * 1000;
+  //     setInterval(() => {
+  //       this.clearCache();
+  //     }, millisecconds);
+  //   },
+  //   validate: function (request, response, next) {
+  //     if (!request.middlaware.openToRequest(request.socket.remoteAddress)) {
+  //       let model = request.middlaware.blockedToRequest();
+
+  //       response.status(model.code);
+  //       response.json(model);
+  //       return response.end();
+  //     }
+  //     request.middlaware.newRequest(request.socket.remoteAddress);
+
+  //     let rule = request.middlaware.routeRules[request.middlaware.getURL(request.url)];
+  //     if (!rule) return next();
+  //     if (rule[request.middlaware.getMethod(request.method)]) {
+
+  //     }
+  //     if (rule.functions)
+  //       for(let func of rule.functions) {
+  //         func.call(request, response, next);
+  //       }
+
+  //     return true;
+  //   },
+  //   getURL: function (url = '') {
+  //     return url.toLowerCase();
+  //   },
+  //   getMethod: function (method = '') {
+  //     return method.toUpperCase();
+  //   },
+  //   addRule: function (url, method, rule) { 
+  //     if (!this.routeRules[this.getURL(url)]) {
+  //       this.routeRules[this.getURL(url)] = { functions: [] };
+  //     }
+  //     if (!this.routeRules[this.getURL(url)][this.getMethod(method)]) {
+  //       this.routeRules[this.getURL(url)][this.getMethod(method)] = [];
+  //     }
+
+  //     this.routeRules[this.getURL(url)][this.getMethod(method)].push(rule);
+  //   },
+  //   addMiddlaware: function (url, method, func) {
+  //     if (!this.routeRules[this.getURL(url)]) {
+  //       this.routeRules[this.getURL(url)] = { functions: [] };
+  //     }
+
+  //     this.routeRules[this.getURL(url)].functions.push(func);
+  //   },
+  //   maxRequestForUser(max = 20) {
+  //     this.options.maxRequests = max;
+  //   }
+  // }
+// }
+
+module.exports = Middlaware;

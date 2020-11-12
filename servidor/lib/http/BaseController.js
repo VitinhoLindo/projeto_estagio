@@ -18,23 +18,15 @@ const currentTime = function () {
 }
 
 class BaseController {
-    request = express.request;
-    response = express.response;
-    Validator = Validator;
-    app = require('../../http')();;
+    request    = express.request;
+    response   = express.response;
+    Validator  = Validator;
+    app        = require('../../app')();
 
     constructor(_request, _response) {
-        this.request = _request;
-        this.response = _response;
-        this.app = _request.getApp();
-        this.request.all = () => {
-            return Object.assign(
-                {},
-                this.request.body || {},
-                this.request.params || {},
-                this.request.query || {}
-            );
-        }
+        this.request    = _request;
+        this.response   = _response;
+        this.app        = _request.getApp();
     }
 
     // async encrypt(value) {

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
+    "dev": "vue-cli-service serve",
     "build": "vue-cli-service build"
   },
   "dependencies": {
@@ -20,7 +20,8 @@
     "@vue/compiler-sfc": "^3.0.0-0",
     "node-sass": "^5.0.0",
     "sass-loader": "^10.0.5",
-    "vue3-qrcode": "^0.0.2"
+    "vue3-qrcode": "^0.0.2",
+    "vue3-qrcode-reader": "^0.0.1"
   },
   "browserslist": [
     "> 1%",

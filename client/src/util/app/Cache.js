@@ -1,6 +1,6 @@
-import MyCrypto from './MyCrypto'
+import Windows from './Window'
 
-class Cache extends MyCrypto {
+class Cache extends Windows {
   constructor() { super(); }
 }
 

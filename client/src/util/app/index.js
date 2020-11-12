@@ -1,10 +1,11 @@
-import Cache from './Cache'
+import Language from './Language'
 
-class App extends Cache {
+class App extends Language {
 
   constructor() { super(); }
 
   async build() {
+    this.navigatorLanguage()
   }
 }
 
