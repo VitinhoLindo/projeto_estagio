@@ -5,7 +5,7 @@ class App extends Language {
   constructor() { super(); }
 
   async build() {
-    this.navigatorLanguage()
+    await this.navigatorLanguage()
   }
 }
 

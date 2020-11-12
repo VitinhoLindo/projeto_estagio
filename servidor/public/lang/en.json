@@ -1,4 +1,14 @@
 {
   "pt-BR": "Portuguese (Brazil)",
-  "en": "English (United States)"
+  "en": "English (United States)",
+  "error-button": "Confirm",
+  "error-title": "Error",
+
+  "menu-span-title": "Information",
+  "menu-span-content": "Click to show menu",
+  "menu-span-language": "Click to change language",
+
+  "menu-home": "Pagina Inicial",
+  "menu-iten": "Itens",
+  "menu-collaborator": "Collaborators"
 }

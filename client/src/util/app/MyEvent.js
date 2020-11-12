@@ -1,6 +1,6 @@
 import Variables from './Variables'
 
-const listiners = {}
+var listiners = {}
 
 const error = async function (string, callback) {
   if (callback) callback(string, null);
@@ -14,29 +14,53 @@ const success = async function (pid, callback) {
 class MyEvent extends Variables {
   constructor() { super(); }
 
+  randomNumber(min = 0, max = 0) {
+    if (min > max) {
+      let _max = max;
+      max = min;
+      min = _max;
+    }
+
+    let decimalHouse = 10;
+
+    while(max > decimalHouse) {
+      decimalHouse += 10;
+    }
+
+    let rand;
+
+    do {
+      rand = Math.floor(Math.random() * decimalHouse);
+    } while (rand < min || rand > max);
+
+    return rand;
+  }
+
   async on(listen, func, callback) {
     if (typeof listen !== 'string') return error('function.on: variable listen is not string', callback);
     if (typeof func !== 'function') return error('function.on: variable listen is not function', callback);
 
-    if (!listiners[listen]) listiners[listen] = { count: 1 };
-    const pid = listiners[listen].count;
-    listiners[listen].count++;
-    listiners[listen][pid] = func;
+    if (!listiners[listen]) listiners[listen] = { };
 
+    let pid;
+
+    do {
+      pid = this.randomNumber(1, 999999);
+    } while(listiners[listen][pid]);
+
+    listiners[listen][pid] = func;
     return success(pid, callback);
   }
 
   async emit(listen, ...args) {
     if (!listiners[listen]) return error(`function.emit: ${listen} is not defined`);
 
-    for(let pid of listiners[listen]) {
-      (async () => {
-        try {
-          listiners[listen][pid].apply(null, args);
-        } catch (err) {
-          error(err);
-        }
-      })();
+    for(let pid in listiners[listen]) {
+      try {
+        listiners[listen][pid].apply(null, args);
+      } catch (err) {
+        error(err);
+      }
     }
   }
 

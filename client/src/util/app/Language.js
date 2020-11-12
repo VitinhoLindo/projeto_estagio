@@ -3,23 +3,42 @@ import Cache from './Cache'
 class Language extends Cache {
   constructor() { super(); }
 
-  async getLang() {
+  $lang() {
+    return this.language;
+  }
+
+  $langs() {
+    return this.languages;
+  }
+
+  async setLanguageOptions() {
     let { message, result, code, status } = await this.request({
       url: this.paths.language.path,
       method: this.paths.language.method,
-      params: { lang: this.language.lang }
+    });
+
+    this.languages = result;
+  }
+
+  async getLang(lang) {
+    let { message, result, code, status } = await this.request({
+      url: this.paths.language.path,
+      method: this.paths.language.method,
+      params: { lang: lang }
     });
 
     if (status == 'error') {
       return;
     }
 
-    this.language.labels = result;
+    this.language = result;
+    this.emit('language-changed');
   }
 
-  navigatorLanguage() {
+  async navigatorLanguage() {
     this.language.lang = this.window.navigator.language;
-    this.getLang();
+    await this.getLang(this.language.lang);
+    await this.setLanguageOptions();
   }
 }
 

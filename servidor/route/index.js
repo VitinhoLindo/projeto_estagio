@@ -9,6 +9,7 @@ module.exports = function (app = App(), server = express()) {
     response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     response.setHeader('Access-Control-Allow-Headers', '*');
     response.setHeader('Access-Control-Allow-Credentials', false);
+    response.setHeader('Server', 'Nodejs');
 
     request.getApp = () => {
       return app;
@@ -35,6 +36,7 @@ module.exports = function (app = App(), server = express()) {
 
   server.use(Api.Root.route, Api.Root.use);
   server.use(Api.Language.route, Api.Language.use);
+  server.use(Api.Iten.route, Api.Iten.use);
 
   return this;
 }

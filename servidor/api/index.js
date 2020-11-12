@@ -1,4 +1,5 @@
 module.exports = {
   Root: require('./Root'),
-  Language: require('./Language')
+  Language: require('./Language'),
+  Iten: require('./Iten')
 }
