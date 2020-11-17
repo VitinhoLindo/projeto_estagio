@@ -70,6 +70,11 @@ class MyEvent extends Variables {
 
     delete listiners[listen][pid];
   }
+
+  resize(event) {
+    let { innerWidth, innerHeight } = this.window;
+    this.emit('resize', { innerWidth, innerHeight });
+  }
 }
 
 export default MyEvent;

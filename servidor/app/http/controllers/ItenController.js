@@ -1,4 +1,5 @@
 const BaseController = require('./MainController');
+const Iten = require('../../Iten');
 
 class ItenController extends BaseController {
 
@@ -7,10 +8,21 @@ class ItenController extends BaseController {
   static estance() {
     return ItenController;
   }
-  
-  //
+
   async get() {
-    return this.defaultResponseJSON({ message: 'success' });
+    let itens = Iten.instance();
+    let iten = await itens.get();
+    return this.defaultResponseJSON({ result: { iten } });
+  }
+
+  async post() {
+    let validator = this.Validator.make(this.all(), Iten.getModel());
+
+    if (validator.fails()) {
+      return this.defaultResponseJSON(validator.modelResponse());
+    }
+
+    return this.defaultResponseJSON();
   }
 }
 

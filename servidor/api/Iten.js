@@ -10,6 +10,10 @@ route.get('/:id', (req, res) => {
   ItenController.using(req, res).get();
 });
 
+route.post('/', (req, res) => {
+  ItenController.using(req, res).post();
+});
+
 module.exports = {
   route: '/itens',
   use: route

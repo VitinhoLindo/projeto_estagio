@@ -13,7 +13,6 @@ export default {
     listen() {
       this.$app.on(this.listenerName, this.show, (err, pid) => {
         if (err) throw err;
-        (pid);
         this.pid = pid;
       });
     },

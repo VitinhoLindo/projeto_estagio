@@ -7,9 +7,21 @@ class Modules extends MyEvent {
   https      = require('https');
   fs         = require('fs');
   express    = require('express');
-  app        = this.express();
   bodyParser = require('body-parser');
+  crypto     = require('crypto');
+  app        = this.express();
   paths      = {};
+  cache      = {};
+
+  hashAlgorithm = 'sha256';
+
+  serverKeyAlgorithm = 'RSA-OAEP';
+  serverKeyHash      = 'SHA-256';
+  publicExponent     = new Uint8Array([1,0,1]);
+  modulusLength      = 2048;
+  ivLen              = 16;
+
+  exportPublicType   = 'spki';
 
   constructor() { super(); }
 }

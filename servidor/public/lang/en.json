@@ -10,5 +10,13 @@
 
   "menu-home": "Pagina Inicial",
   "menu-iten": "Itens",
-  "menu-collaborator": "Collaborators"
+  "menu-collaborator": "Collaborators",
+  "menu-mark": "Marks",
+
+  "create-mark-label": "Create Mark",
+  "create-item-label": "Create Iten",
+
+  "item-name": "Name",
+  "item-model": "Model",
+  "item-mark" : "Mark"
 }

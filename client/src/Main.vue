@@ -1,9 +1,11 @@
 <template>
-<app-menu />
-<loading />
-<error />
-<div class="content-page">
-  <router-view />
+<div>
+  <app-menu />
+  <div class="content-page">
+    <loading />
+    <error />
+    <router-view />
+  </div>
 </div>
 </template>
 
@@ -24,5 +26,35 @@ body {
     width: 100%;
     height: calc(100% - 40px);
   }
+}
+
+.itens {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.panel {
+  // .add {
+  //   width: 95%;
+  //   height: 45px;
+  //   display: flex;
+  //   // justify-content: center;
+  //   align-items: center;
+
+  //   div {
+  //     border-top-left-radius: 5px;
+  //     border-top-right-radius: 5px;
+  //     width: 100px;
+  //     height: 35px;
+  //     margin: auto 5px;
+  //     background-color: #ffffff;
+  //   }
+  // }
+  // margin: 2.5%;
+  width: 95%;
+  height: 95%;
 }
 </style>

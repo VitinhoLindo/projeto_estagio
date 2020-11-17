@@ -37,6 +37,8 @@ module.exports = function (app = App(), server = express()) {
   server.use(Api.Root.route, Api.Root.use);
   server.use(Api.Language.route, Api.Language.use);
   server.use(Api.Iten.route, Api.Iten.use);
+  server.use(Api.Sync.route, Api.Sync.use);
+  server.use(Api.Mark.route, Api.Mark.use);
 
   return this;
 }

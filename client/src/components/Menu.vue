@@ -57,13 +57,18 @@ export default {
       menus: [{
           label: 'menu-home',
           redirect: '/'
-        }, {
+        },
+        {
           label: 'menu-iten',
           redirect: '/itens'
         },
         {
           label: 'menu-collaborator',
           redirect: '/collaborators'
+        },
+        {
+          label: 'menu-mark',
+          redirect: '/mark'
         }
       ],
       menuLanguage: {

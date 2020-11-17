@@ -5,6 +5,12 @@ const Route   = require('../route');
 class App extends Storage {
   constructor() { super(); }
 
+  intervals() {
+    setInterval(() => {
+      this.cacheClearCryptoKeys();
+    }, 60000);
+  }
+
   async listen() {
     // obtem as configurações do servidor
     let options = Config.get();
@@ -22,6 +28,7 @@ class App extends Storage {
         break;
     }
 
+    this.intervals();
     // server listen
     server.listen(options.listen, this.print([{ message: `${options.type}://${options.listen.host}:${options.listen.port}`, color: 'blue' }]));
   }

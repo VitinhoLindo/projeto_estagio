@@ -163,3 +163,49 @@ mysql -h [HOST] -u victor \
 --ssl-cert=client-cert.pem \
 --ssl-key=client-key.pem -p
 </pre>
+
+sql
+<pre>
+DROP DATABASE IF EXISTS `projeto`;
+CREATE DATABASE `projeto` CHAR SET `utf8mb4`;
+
+USE `projeto`;
+
+DROP TABLE IF EXISTS `colaborador`;
+CREATE TABLE `colaborador` (
+    `id` BIGINT AUTO_INCREMENT,
+    `nome` LONGTEXT NOT NULL, #encrypt
+    `cpf` LONGTEXT NOT NULL, #encrypt
+    `email` LONGTEXT NOT NULL, #encrypt
+    PRIMARY KEY(`ID`)
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 ;
+
+DROP TABLE IF EXISTS `marca`;
+CREATE TABLE `marca` (
+    `id` BIGINT AUTO_INCREMENT,
+    `nome` LONGTEXT NOT NULL, #encrypt
+    PRIMARY KEY(`id`)
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 ;
+
+DROP TABLE IF EXISTS `iten`;
+CREATE TABLE `iten` (
+    `id` BIGINT AUTO_INCREMENT,
+    `nome` LONGTEXT NOT NULL, #encrypt
+    `modelo` LONGTEXT NOT NULL, #encrypt
+    `marca` BIGINT NOT NULL,
+    PRIMARY KEY(`id`),
+    FOREIGN KEY(`marca`) REFERENCES `marca`(`id`)
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 ;
+
+DROP TABLE IF EXISTS `aluguel`;
+CREATE TABLE `aluguel` (
+    `id` BIGINT AUTO_INCREMENT,
+    `colaborador` BIGINT NOT NULL,
+    `iten` BIGINT NOT NULL,
+    `crated_at` DATETIME NOT NULL,
+    `expiration_at` DATETIME NOT NULL,
+    PRIMARY KEY(`id`),
+    FOREIGN KEY (`colaborador`) REFERENCES `colaborador`(`id`),
+    FOREIGN KEY (`iten`) REFERENCES `iten`(`id`)
+) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 ;
+</pre>
