@@ -29,10 +29,11 @@ export default {
      * @param {message: String, show: Boolean} opt 
      */
     showError(opt = { message: '', show: false }) {
+      console.log(opt);
       this.errorValues.show = opt.show;
-      if (message.constructor.name == 'String') {
+      if (opt.message.constructor.name == 'String') {
         this.errorValues.message = [opt.message];
-      } else if (message.constructor.name == 'Array') {
+      } else if (opt.message.constructor.name == 'Array') {
         this.errorValues.message = opt.message;
       }
     },
@@ -42,7 +43,7 @@ export default {
     errorClick() {
       this.errorValues = {
         show: false,
-        message: ''
+        message: []
       };
     }
   },

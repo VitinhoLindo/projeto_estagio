@@ -21,6 +21,12 @@ class Modules extends MyEvent {
   modulusLength      = 2048;
   ivLen              = 16;
 
+  salt             = 'salt';
+  saltRang         = 24;
+  passLen          = 100;
+  cryptoAlgorithm  = 'aes-192-cbc';
+  cryptoListenTime = parseInt(this.process.env.CRYPTO_LISTEN) || 3600000;
+
   exportPublicType   = 'spki';
 
   constructor() { super(); }

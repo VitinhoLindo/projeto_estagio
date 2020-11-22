@@ -18,7 +18,8 @@ module.exports = function (app = App(), server = express()) {
   }
 
   const loggable = function (request = express.request, response = express.response, next) {
-    app.emit('print', [{ message: 'new request:', color: 'green' }, { message: ` ${request.method} `, color: 'yellow' }, { message: request.url, color: 'white' }])
+    let url = request.url.split(/\?/);
+    app.emit('print', [{ message: 'new request:', color: 'green' }, { message: ` ${request.method} `, color: 'yellow' }, { message: url[0], color: 'white' }])
     next();
   }
 

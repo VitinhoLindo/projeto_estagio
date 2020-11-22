@@ -2,17 +2,15 @@ const mysql = require('mysql2')
 const process = require('process');
 const fs = require('fs');
 const Validator = require('../http/Validator');
+const Collection = require('./Collection');
+const { Console } = require('console');
+
+var selectFields = [];
+var whereFields = [];
 
 class Connect {
-  table = '';
-  model = {};
-  selectFields = [];
-  whereFields = [];
 
-  constructor(table, model) {
-    this.table = table;
-    this.model = model;
-  }
+  constructor() { }
 
   async getConfig() {
     return {
@@ -27,6 +25,16 @@ class Connect {
         cert: await fs.readFileSync(__dirname + '/ssl/client-cert.pem')
       }
     }
+  }
+
+  static async encryptOrDecrypt(data, app, funcName, date) {
+    if (!this.getEncrypt) throw 'getEncrypt is not defined';
+    let encrytData = this.getEncrypt();
+    for(let key of encrytData) {
+      if (data[key]) data[key] = await app[funcName](data[key], date);
+    }
+
+    return data;
   }
 
   async connect() {
@@ -60,20 +68,25 @@ class Connect {
     });
   }
 
-  validateData(model, data) {
+  validateData(data) {
+    let model = this.constructor.getModel();
     let _data = {};
 
     if (!model) throw 'model of data is not defined';
 
-    let validator = Validator.make(data, model);
-
-    if (validator.fails()) {
-      throw `message: ${validator.message}\nrule: ${validator.rule}`;
-    }
-
     for (let key in model) {
       if (!data[key]) continue;
       _data[key] = data[key];
+    }
+
+    if (this.constructor.getTimestamp()) {
+      if (_data.id) {
+        delete _data.id;
+        delete _data.created_at;
+        _data.updated_at = new Date();
+      } else {
+        _data.created_at = new Date();
+      }
     }
 
     return _data;
@@ -87,16 +100,18 @@ class Connect {
     }
 
     try {
-      data = this.validateData(this.model, data);
+      var table = this.constructor.getTable();
+      data = this.validateData(data);
 
       return new Promise((resolve, reject) => {
-        this.client.query(`INSERT INTO \`${this.table}\` SET ?`, data, async (err, result) => {
+        this.client.query(`INSERT INTO \`${table}\` SET ?`, data, async (err, result) => {
           await this.disconnect();
           if (err) {
             return reject(err);
           }
 
           data.id = result.insertId;
+          data = Collection.instance([data], this).first();
           return resolve(data);
         });
       });
@@ -108,7 +123,7 @@ class Connect {
   whereNotNull(opt = { column: '' }) {
     if (!opt.column) throw "";
     let query = `${opt.column} is not Null`;
-    this.whereFields.push(query);
+    whereFields.push(query);
     return this;
   }
 
@@ -117,18 +132,20 @@ class Connect {
     if (!opt.comparison) opt.comparison = '=';
     if (!opt.value)      opt.value = null; 
     let query = `${opt.column} ${opt.comparison} ${mysql.escape(opt.value)}`;
-    this.whereFields.push(query);
+    whereFields.push(query);
     return this;
   }
 
   select(...args) {
-    this.selectFields = this.selectFields.concat(args);
+    selectFields = selectFields.concat(args);
     return this;
   }
 
   getWhereFields() {
-    let where = this.whereFields.slice();
-    this.whereFields = [];
+    let where = whereFields.slice();
+    whereFields = [];
+
+    if (!where.length) return '';
 
     let query = '';
     for(let x in where) {
@@ -136,32 +153,107 @@ class Connect {
       else query += `${where[x]}`;      
     }
 
-    return query;
+    return `WHERE (${query})`;
   }
 
-  async get() {
-    try {
+  getSelectFields() {
+    let selectQuery = '';
+    let _selectFields = selectFields.slice();
+    selectFields = [];
+
+    if (!_selectFields.length) return '*';
+
+    for(let index in _selectFields) {
+      if (index == 0) {
+        selectQuery += `\`${_selectFields[index]}\``
+      } else {
+        selectQuery += `, \`${_selectFields[index]}\``
+      }
+    }
+  
+    return selectQuery;
+  }
+
+  /**
+   * select query
+   * 
+   * return Promise[Collection]
+   */
+  get() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        if (!this.client) await this.connect();
+    
+        let query = '';
+    
+        let table = this.constructor.getTable();
+        query = `SELECT ${this.getSelectFields()} FROM \`${table}\` ${this.getWhereFields()};`
+        
+        this.client.query({
+          sql: query
+        }, async (err, data) => {
+          await this.disconnect();
+          if (err) return reject(err);
+          return resolve(Collection.instance(data, this));
+        });
+      } catch (error) {
+        return reject(error);
+      }
+    });
+  }
+
+  save() {
+    return new Promise(async (resolve,reject) => {
+      let data = {};
+      let table = this.constructor.getTable();
+      for(let key in this) data[key] = this[key];
+      data = this.validateData(data);
+      this.where({ column: 'id', value: this.id });
       if (!this.client) await this.connect();
-    } catch (error) {
-      throw error;
-    }
 
-    let query = '';
-    try {
-      query = `SELECT ${this.selectFields.length ? this.getFields(): '*'} FROM \`${this.table}\` ${this.whereFields.length ? 'WHERE ' + this.getWhereFields() : ''};`
-    } catch (error) {
-      throw error;      
-    }
-
-    return new Promise((resolve, reject) => {
-      this.client.query({
-        sql: query
-      }, async (err, data) => {
+      this.client.query(`UPDATE ${table} SET ? ${this.getWhereFields()};`, data, async (err, data) => {
         await this.disconnect();
         if (err) return reject(err);
         return resolve(data);
       });
+    });  
+  }
+
+  async first() {
+    let res = await this.get();
+
+    return res.first();
+  }
+
+  async delete() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let id = this.id;
+        if (!id) return reject(`inpossible delete data, first get instance data to delete`);
+
+        this.where({ column: 'id', value: id });
+        
+        let table = this.constructor.getTable();
+        let sql = `DELETE FROM ${table} ${this.getWhereFields()}`;
+
+        if (!this.client) await this.connect();
+
+        this.client.query({
+          sql: sql
+        }, async (err, data) => {
+          await this.disconnect();
+
+          if (err) return reject(err);
+          return resolve(data);
+        });
+      } catch (error) {
+        return reject(error);
+      }
     });
+  }
+
+  toJSON() {
+    return Object.assign({}, this);
   }
 }
 

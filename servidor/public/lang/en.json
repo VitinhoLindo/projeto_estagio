@@ -8,10 +8,18 @@
   "menu-span-content": "Click to show menu",
   "menu-span-language": "Click to change language",
 
-  "menu-home": "Pagina Inicial",
+  "menu-home": "Home page",
   "menu-iten": "Itens",
   "menu-collaborator": "Collaborators",
   "menu-mark": "Marks",
+
+  "delete-data": "Delete",
+  "update-data": "Update",
+  "cancel": "Cancel",
+
+  "label-name": "Name",
+  "label-created": "Created At",
+  "label-updated": "Updated At",
 
   "create-mark-label": "Create Mark",
   "create-item-label": "Create Iten",

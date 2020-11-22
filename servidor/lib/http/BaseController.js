@@ -29,6 +29,11 @@ class BaseController {
     this.app = _request.getApp();
   }
 
+  cacheCrypto() {
+    let cache = this.app.getCache(this.request.socket.remoteAddress);
+    return cache ? true : false;
+  }
+
   getRandomIvs(ivs = [new Uint8Array(16)]) {
     let index = this.app.randomNumber(0, ivs.length - 1);
     return ivs[index];
@@ -50,42 +55,69 @@ class BaseController {
     return Buffer.from(encryptBuffer).toString('base64');
   }
 
-  dataString(value) {
+  async encryptOrDecryptObject(param, func) {
+    let object = {};
+
+    for (let key in param) {
+      let value = param[key];
+      let _k = await this[func](key), _v;
+
+      if (!value) value = 'null';
+      switch (value.constructor.name) {
+        case 'Object':
+          _v = await this.encryptOrDecryptObject(value, func); break;
+        case 'Array':
+          _v = await this.encryptOrDecryptArray(value, func); break;
+        default:
+          _v = await this.encrytOrDecrypt(value, func); break;
+      }
+
+      object[_k] = _v;
+    }
+
+    return object;
+  }
+
+  async encryptOrDecryptArray(param, func) {
+    let array = [];
+
+    for (let value of param) {
+      let _v;
+
+      if (!value) value = 'null';
+      switch (value.constructor.name) {
+        case 'Object':
+          _v = await this.encryptOrDecryptObject(value, func); break;
+        case 'Array':
+          _v = await this.encryptOrDecryptArray(value, func); break;
+        default:
+          _v = await this.encrytOrDecrypt(value, func); break;
+      }
+
+      array.push(_v);
+    }
+
+    return array;
+  }
+
+  async encrytOrDecrypt(value, func) {
+    if (!value) return null;
+
     switch (value.constructor.name) {
       case 'String':
-        return value;
-      case 'Date':
-        return value.toJSON();
+        return await this[func](value);
       case 'Number':
-        return value.toString();
+        return await this[func](value.toString());
+      case 'Object':
+        return await this.encryptOrDecryptObject(value, func);
+      case 'Array':
+        return await this.encryptOrDecryptArray(value, func);
+      case 'Date':
+        return await this[func](value.toJSON());
+      default: {
+        return null;
+      }
     }
-  }
-
-  async encryptObject(data) {
-    let objectEncrypted = {};
-
-    for(let key in data) {
-      let value = this.dataString(data[key]);
-      let _k = await this.encrypt(key),
-          _v = await this.encrypt(value);
-
-      objectEncrypted[_k] = _v;
-    }
-
-    return objectEncrypted;
-  }
-
-  async decryptObject(data = {}) {
-    let objectDecrypted = {};
-
-    for(let key in data) {
-      let _k = await this.decrypt(key), 
-          _v = await this.decrypt(data[key]);
-
-      objectDecrypted[_k] = _v;
-    }
-
-    return objectDecrypted;
   }
 
   async decrypt(value = '') {
@@ -172,6 +204,17 @@ class BaseController {
     this.setStatus(_response.requestStatus);
     this.setMessage(_response.requestMessage);
     this.resEnd();
+  }
+
+  sendError(error) {
+    try {
+      if (error.constructor.name == 'Object') {
+        return this.defaultResponseJSON(error);
+      }
+      return this.defaultResponseJSON({ code: 500, message: 'internal server error' });
+    } catch (error) { 
+      this.request.socket.destroy(err => {});
+    }
   }
 
   static using(_request, _response) {

@@ -5,5 +5,8 @@ module.exports = {
   css: "css/",
   js: "js/",
   mail: "mail/",
-  lang: "lang/"
+  lang: "lang/",
+  lib: "lib/",
+  database: "database/",
+  crypto: "crypto/"
 }

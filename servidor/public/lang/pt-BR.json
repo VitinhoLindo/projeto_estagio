@@ -13,6 +13,14 @@
   "menu-collaborator": "Colaboradores",
   "menu-mark": "Marca",
 
+  "delete-data": "Apagar",
+  "update-data": "Atualizar",
+  "cancel": "Cancelar",
+
+  "label-name": "Nome",
+  "label-created": "Criado em",
+  "label-updated": "Atualizado em",
+
   "create-mark-label": "Criar Marca",
   "create-item-label": "Criar Item",
 

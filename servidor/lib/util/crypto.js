@@ -1,7 +1,39 @@
 const Cache = require('./cache');
 
 class Crypto extends Cache {
+  keys = {};
+
   constructor() { super(); }
+
+  getDirCrypto(date = new Date()) {
+    let dateObject = this.getMtDate(date).dateObject();
+
+    return this.getCryptoDir(`crypto-${dateObject.currentDate}.json`)
+  }
+
+  async getCacheDate(date = new Date()) {
+    let dateObject = this.getMtDate(date).dateObject();
+    let key = this.keys[dateObject.currentDate];
+
+    if (key) {
+      return key;
+    } else {
+      let dirFile  = this.getDirCrypto(date);
+  
+      key = await this.getFile(dirFile, { encoding: 'utf-8' });
+
+      if (!key) return null;
+
+      key = JSON.parse(key);
+      this.keys[dateObject.currentDate] = {
+        pass: key.pass,
+        key : this.generateKey(key.pass),
+        iv  : Buffer.from(key.iv, 'hex')
+      };
+
+      return this.keys[dateObject.currentDate];
+    }
+  }
 
   getIv() {
     return this.crypto.webcrypto.getRandomValues(new Uint8Array(this.ivLen));
@@ -35,6 +67,75 @@ class Crypto extends Cache {
     } while (rand < min || rand > max);
 
     return rand;
+  }
+
+  randomString(len = 20) {
+    let characters = 'abcdefghijklmnopqrstuvxywz0123456789!@#$%¨&*_-+=§{[]}ºª;:,><.°';
+    let randomString = '';
+
+    for(let x = 0; x < len; x++) {
+      let index = this.randomNumber(0, characters.length - 1);
+      randomString += characters[index];
+    }
+
+    return randomString;
+  }
+
+  getHexUsingString(value = '') {
+    return Buffer.from(value, 'utf-8').toString('hex')
+  }
+
+  generateKey(pass = this.randomString(this.passLen)) {
+    return this.crypto.scryptSync(
+      pass,
+      this.salt,
+      this.saltRang
+    )
+  }
+
+  getEncrypt(key = this.generateKey(), iv = this.getIv()) {
+    return this.crypto.createCipheriv(
+      this.cryptoAlgorithm,
+      key,
+      iv
+    );
+  }
+
+  getDecrypt(key = this.generateKey(), iv = this.getIv()) {
+    return this.crypto.createDecipheriv(
+      this.cryptoAlgorithm,
+      key,
+      iv
+    )
+  }
+
+  async encrypt(value, date = new Date()) {
+    let cryptoKey = await this.getCacheDate(date);
+
+    if (!cryptoKey) throw `key don't exists ${date.toJSON()}`;
+
+    let encrypted = '';
+    let encrypt = this.getEncrypt(cryptoKey.key, cryptoKey.iv);
+
+    encrypted += encrypt.update(value, 'utf8', 'hex');
+    encrypted += encrypt.final('hex');
+
+    return encrypted;
+  }
+
+  async decrypt(value, date = new Date()) {
+    let cryptoKey = await this.getCacheDate(date);
+    // console.log(cryptoKey);
+
+    if (!cryptoKey) throw `key don't exists ${date.toJSON()}`;
+
+    let decrypted = '';
+    let decrypt = this.getDecrypt(cryptoKey.key, cryptoKey.iv);
+
+    decrypted += decrypt.update(value, 'hex', 'utf8');
+    decrypted += decrypt.final('utf8');
+
+    return decrypted;
   }
 
   async generateKeys() {
@@ -113,6 +214,43 @@ class Crypto extends Cache {
       this.exportPublicType,
       key
     );
+  }
+
+  async newCrypto(dateObject = this.getMtDate().dateObject()) {
+    let cryptoKey = await this.getCacheDate(dateObject.currentDateObject);
+
+    if (!cryptoKey) {
+      let pass = this.hash(
+        this.randomString(
+          this.passLen
+        )
+      );
+      let key  = this.generateKey(pass);
+      let iv   = Buffer.from(this.getIv());
+
+      let dirAndFile = this.getCryptoDir(`crypto-${dateObject.currentDate}.json`);
+      await this.setFile(dirAndFile, JSON.stringify({
+        pass: pass,
+        iv : Buffer.from(iv, 'binary').toString('hex')
+      }), { encoding: 'utf-8' });
+      this.keys[dateObject.currentDate] = {
+        pass: pass,
+        key : key,
+        iv  : iv
+      };
+      return;
+    }
+  }
+
+  cryptoListen() {
+    this.newCrypto();
+    setInterval(() => {
+      let dateObject = this.getMtDate().dateObject();
+
+      if (dateObject.time.hour == 0 && dateObject.time.minute == 0) {
+        this.newCrypto();
+      }
+    }, 30000);
   }
 }
 

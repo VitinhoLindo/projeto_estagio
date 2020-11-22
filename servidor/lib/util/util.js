@@ -36,6 +36,14 @@ class MtDate {
     return this;
   }
 
+  decreaseHour(value = 0) {
+    if (!value) return this;
+    if (!parseInt(value)) return this;
+
+    this.date.setHours(this.hour + parseInt(value));
+    return this;    
+  }
+
   addHours(value = 0) {
     if (!value) return this;
     if (!parseInt(value)) return this;
@@ -60,13 +68,31 @@ class MtDate {
     this.date = new Date();
     return this.date;
   }
+
+  dateObject() {
+    return {
+      date: {
+        year: this.year,
+        month: this.month,
+        day: this.day,
+      },
+      time: {
+        hour: this.hour,
+        minute: this.minute,
+        seconds: this.seconds,
+        milliseconds: this.milliseconds,
+      },
+      currentDate: `${this.year}-${this.month}-${this.day}`,
+      currentDateObject: this.get()
+    };
+  }
 }
 
 
 class Util extends Directory {
   constructor() { super(); }
 
-  getMtDate(date) {
+  getMtDate(date = new Date()) {
     return new MtDate(date);
   }
 }

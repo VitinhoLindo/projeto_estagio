@@ -43,26 +43,11 @@ class MyRequest extends MyCrypto {
     return headers;
   }
 
-  dataString(value = '') {
-    switch (value.constructor.name) {
-      case 'String':
-        return value;
-      case 'Number':
-        return value.toString();
-      case 'Date':
-        return value.toJSON();
-    }
-  }
-
-  originalFormatData(value) {
-    return value;
-  }
-
   async params(params = {}, encrypt = false) {
     let data = Object.assign({}, params);
 
     if (encrypt) {
-      data = await this.encrytObject(data);
+      data = await this.encrytOrDecrypt(data, 'encrypt');
     }
 
     return data;
@@ -72,42 +57,10 @@ class MyRequest extends MyCrypto {
     let body = Object.assign({}, data);
 
     if (encrypt) {
-      body = await this.encrytObject(body);
+      body = await this.encrytOrDecrypt(body, 'encrypt');
     }
 
     return body;
-  }
-
-  async encrytObject(object = {}) {
-    let encryptJSON = {};
-
-    for(let key in object) {
-      let value = this.dataString(object[key]);
-
-      let [_k, _v] = await Promise.all([
-        this.encrypt(key),
-        this.encrypt(value)
-      ]);
-
-      encryptJSON[_k] = _v;
-    } 
-
-    return encryptJSON;
-  }
-
-  async decryptObject(object = {}) {
-    let decryptJSON = {};
-
-    for(let key in object) {
-      let [_k, _v] = await Promise.all([
-        this.decrypt(key),
-        this.decrypt(object[key])
-      ]);
-
-      decryptJSON[_k] = _v;
-    } 
-
-    return decryptJSON;
   }
 
   async request(option = new MyRequestOption) {
@@ -142,17 +95,9 @@ class MyRequest extends MyCrypto {
       }
 
       if (option.encrypt) {
-        let decryptedResult = {};
-
-        for(let key in data.result) {
-          let _k = await this.decrypt(key);
-          let _v = await this.decrypt(data.result[key]);
-
-          decryptedResult[_k] = this.originalFormatData(_v);
-        }
-
-        data.result = decryptedResult;
+        data.result = await this.encrytOrDecrypt(data.result, 'decrypt');
       }
+
       return ResponseServer.stance(data);
     } catch (error) {
       console.error(error);

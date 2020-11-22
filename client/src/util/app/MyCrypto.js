@@ -1,4 +1,4 @@
-import MyEvent from './MyEvent' 
+import MyEvent from './MyEvent'
 
 class AppCrypto extends MyEvent {
   constructor() { super(); }
@@ -43,7 +43,7 @@ class AppCrypto extends MyEvent {
     let string = '';
     let bytes = new Uint8Array(binary);
 
-    for(let byte of bytes) string += String.fromCharCode(byte);
+    for (let byte of bytes) string += String.fromCharCode(byte);
     return string;
   }
 
@@ -109,10 +109,10 @@ class AppCrypto extends MyEvent {
    */
   hexToString(hex = '') {
     let string = '';
-    let nextIndex = 0; 
+    let nextIndex = 0;
 
-    while(nextIndex < hex.length) {
-      if (nextIndex + 2 < hex.length)  string += String.fromCharCode(parseInt(hex.substr(nextIndex, 2), 16));
+    while (nextIndex < hex.length) {
+      if (nextIndex + 2 < hex.length) string += String.fromCharCode(parseInt(hex.substr(nextIndex, 2), 16));
       else string += String.fromCharCode(parseInt(hex.substr(nextIndex), 16));
       nextIndex += 2;
     }
@@ -184,7 +184,7 @@ class AppCrypto extends MyEvent {
     let nextIndex = 0;
 
     let pemCert = `-----BEGIN ${label}-----\r\n`;
-    while(nextIndex < keyBase64.length) {
+    while (nextIndex < keyBase64.length) {
       let nextLineOrEnd = nextIndex + 64 < keyBase64.length;
       if (nextLineOrEnd) pemCert += `${keyBase64.substr(nextIndex, 64)}\r\n`;
       else pemCert += `${keyBase64.substr(nextIndex)}\r\n`;
@@ -213,10 +213,10 @@ class AppCrypto extends MyEvent {
   pemToBinary(pem = '') {
     let lines = pem.split('\n');
     let encoded = '';
-    for(let line of lines) {
+    for (let line of lines) {
       if (
         line.trim().length > 0 &&
-        line.indexOf('-BEGIN RSA PRIVATE KEY-') < 0 && 
+        line.indexOf('-BEGIN RSA PRIVATE KEY-') < 0 &&
         line.indexOf('-BEGIN RSA PUBLIC KEY-') < 0 &&
         line.indexOf('-END RSA PRIVATE KEY-') < 0 &&
         line.indexOf('-END RSA PUBLIC KEY-') < 0
@@ -250,7 +250,7 @@ class AppCrypto extends MyEvent {
         modulusLength: this.modulusLength,
         publicExponent: this.publicExponent,
         hash: this.hashAlgorithm
-      }, true, ['encrypt','decrypt']);
+      }, true, ['encrypt', 'decrypt']);
 
       this.secret.app.privateKey = privateKey;
       this.secret.app.publicKey = publicKey;
@@ -334,10 +334,10 @@ class AppCrypto extends MyEvent {
     let decryptBuffer = null, count = 0;
     let valueBuffer = this.base64StringToArrayBuffer(value);
 
-    while(count < 10) {
+    while (count < 10) {
       try {
         let vector = this.secret.ivs[count];
-    
+
         decryptBuffer = await this.window.crypto.subtle.decrypt({
           name: this.keyAlgorithm,
           iv: vector
@@ -359,10 +359,10 @@ class AppCrypto extends MyEvent {
   async importIvs(ivs = []) {
     let ivsBytes = [];
 
-    for(let iv of ivs) {
+    for (let iv of ivs) {
       let bytes = new Uint8Array(this.ivLen);
 
-      for(let index in iv) {
+      for (let index in iv) {
         index = parseInt(index);
 
         bytes[index] = iv[index];
@@ -378,20 +378,82 @@ class AppCrypto extends MyEvent {
     let { status, code, message, result } = await this.request({
       url: '/sync',
       method: 'POST',
-      data: Object.assign({ }, 
-      {
-        pub: await this.exportPublicKey()
-      },
-      data
+      data: Object.assign({},
+        {
+          pub: await this.exportPublicKey()
+        },
+        data
       )
     });
 
     if (status == 'error') {
       throw message;
     }
-
-    await this.importIvs(result.ivs);
+    
     await this.importPublicKey(result.pub);
+    await this.importIvs(result.ivs);
+  }
+
+  async encryptOrDecryptObject(param, func) {
+    let object = {};
+
+    for (let key in param) {
+      let value = param[key];
+      let _k = await this[func](key), _v;
+
+      if (!value) value = 'null';
+      switch (value.constructor.name) {
+        case 'Object':
+          _v = await this.encryptOrDecryptObject(value, func); break;
+        case 'Array':
+          _v = await this.encryptOrDecryptArray(value, func); break;
+        default:
+          _v = await this.encrytOrDecrypt(value, func); break;
+      }
+
+      object[_k] = _v;
+    }
+
+    return object;
+  }
+
+  async encryptOrDecryptArray(param, func) {
+    let array = [];
+
+    for (let value of param) {
+      let _v;
+
+      if (!value) value = 'null'; 
+      switch (value.constructor.name) {
+        case 'Object':
+          _v = await this.encryptOrDecryptObject(value, func); break;
+        case 'Array':
+          _v = await this.encryptOrDecryptArray(value, func); break;
+        default:
+          _v = await this.encrytOrDecrypt(value, func); break;
+      }
+
+      array.push(_v);
+    }
+
+    return array;
+  }
+
+  async encrytOrDecrypt(value, func) {
+    if (!value) value = 'null';
+
+    switch (value.constructor.name) {
+      case 'String':
+        return await this[func](value);
+      case 'Number':
+        return await this[func](value.toString());
+      case 'Object':
+        return await this.encryptOrDecryptObject(value, func);
+      case 'Array':
+        return await this.encryptOrDecryptArray(value, func);
+      case 'Date':
+        return await this[func](value.toJSON());
+    }
   }
 }
 

@@ -53,13 +53,14 @@ export default {
       this.locked = true;
       this.$app.emit('loading', { on: true });
 
-      let data = {};
-
-      for(let key in this.markInput) {
-        data[key] = this.markInput[key].value;
-      }
 
       try {
+        let data = {};
+
+        for(let key in this.markInput) {
+          data[key] = this.markInput[key].value;
+        }
+
         let { status, code, result, message } = await this.$app.request({
           url: '/mark',
           method: 'POST',
@@ -67,10 +68,12 @@ export default {
           encrypt: true
         });
 
+        if (status == 'error') throw message;
+
         this.locked = false;
-        this.$emit('created-mark', event, result);
-        return;
+        return this.$emit('created-mark', event, result);
       } catch(err) {
+        this.app.$emit('error', { message: error, show: true });
       }
 
       this.$app.emit('loading', { on: false });

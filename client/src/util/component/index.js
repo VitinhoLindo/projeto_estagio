@@ -6,6 +6,7 @@ import Menu from '../../components/Menu.vue'
 import AppAdd from '../../components/Add.vue'
 import CreateItem from '../../components/CreateIten.vue'
 import CreateMark from '../../components/CreateMark.vue'
+import DefaultInformation from '../../components/DetaultInformation.vue'
 
 export default function (Vue) {
   // Vue.component('qr-code', VueQrcode);
@@ -16,4 +17,5 @@ export default function (Vue) {
   Vue.component('app-add', AppAdd);
   Vue.component('create-item', CreateItem);
   Vue.component('create-mark', CreateMark);
+  Vue.component('information-component', DefaultInformation);
 }

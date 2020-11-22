@@ -9,7 +9,15 @@ class Directory extends Modules {
   }
 
   getFile(path, encoding = { encoding: 'utf-8' }) {
-    return this.fs.readFileSync(path, encoding);
+    try {
+      return this.fs.readFileSync(path, encoding);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  setFile(path, value, encoding = { encoding: 'utf-8' }) {
+    this.fs.writeFileSync(path, value, encoding);
   }
 
   getPublicDir() {
@@ -20,6 +28,21 @@ class Directory extends Modules {
     let publicPath = this.getPublicDir();
     let langDir = `${publicPath}${this.paths.lang}`;
     return (file) ? `${langDir}${file}` : langDir;
+  }
+
+  getLibDir() {
+    return `${this.__dirname}${this.paths.dir}${this.paths.lib}`;
+  }
+
+  getLibDatabaseDir() {
+    let libDir = this.getLibDir();
+    return `${libDir}${this.paths.database}`;
+  }
+
+  getCryptoDir(file) {
+    let databaseDir = this.getLibDatabaseDir();
+    let cryptoDir = `${databaseDir}${this.paths.crypto}`;
+    return file ? `${cryptoDir}${file}` : cryptoDir
   }
 
   setDir(__dir = '') {

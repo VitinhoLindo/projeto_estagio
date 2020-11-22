@@ -6,6 +6,10 @@ route.get('/', (req, res) => {
   MarkController.using(req, res).get();
 });
 
+route.get('/:id', (req, res) => {
+  MarkController.using(req, res).get();
+});
+
 route.post('/', (req, res) => {
   MarkController.using(req, res).post();
 });
