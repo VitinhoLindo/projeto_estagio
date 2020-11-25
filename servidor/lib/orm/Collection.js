@@ -52,13 +52,9 @@ class Collection {
     let model = this.construct.getEncrypt();
     let values = [];
 
-    // console.log(this);
     for(let value of this.original) {
       try {
         for(let column of model) {
-          // if (value['updated_at']) {
-          //   console.log(value['updated_at']);
-          // }
           value[column] = await app[funcName](value[column], value['updated_at'] || value['created_at']);
         }
   
@@ -68,8 +64,7 @@ class Collection {
       }
     }
 
-      this.original = values;
-
+    this.original = values;
   }
 
   toArray() {

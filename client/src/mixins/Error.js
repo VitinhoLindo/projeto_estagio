@@ -29,7 +29,6 @@ export default {
      * @param {message: String, show: Boolean} opt 
      */
     showError(opt = { message: '', show: false }) {
-      console.log(opt);
       this.errorValues.show = opt.show;
       if (opt.message.constructor.name == 'String') {
         this.errorValues.message = [opt.message];

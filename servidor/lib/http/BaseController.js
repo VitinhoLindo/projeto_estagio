@@ -69,7 +69,7 @@ class BaseController {
         case 'Array':
           _v = await this.encryptOrDecryptArray(value, func); break;
         default:
-          _v = await this.encrytOrDecrypt(value, func); break;
+          _v = await this.encryptOrDecrypt(value, func); break;
       }
 
       object[_k] = _v;
@@ -91,7 +91,7 @@ class BaseController {
         case 'Array':
           _v = await this.encryptOrDecryptArray(value, func); break;
         default:
-          _v = await this.encrytOrDecrypt(value, func); break;
+          _v = await this.encryptOrDecrypt(value, func); break;
       }
 
       array.push(_v);
@@ -100,7 +100,7 @@ class BaseController {
     return array;
   }
 
-  async encrytOrDecrypt(value, func) {
+  async encryptOrDecrypt(value, func) {
     if (!value) return null;
 
     switch (value.constructor.name) {

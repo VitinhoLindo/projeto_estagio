@@ -24,7 +24,7 @@ class App extends Storage {
         server = this.http.createServer(this.app);
         break;
       case 'https':
-        server = this.http.createServer(options.ssl, this.app);
+        server = this.https.createServer(options.ssl, this.app);
         break;
     }
 

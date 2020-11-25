@@ -4,11 +4,17 @@ const Api = require('../api');
 const express = require('express');
 
 module.exports = function (app = App(), server = express()) {
+
+  server.use('/', express.static(app.__dirname + '/public/html'));
+  server.use('/js', express.static(app.__dirname + '/public/js'));
+  server.use('/css', express.static(app.__dirname + '/public/css'));
+  server.use('/ico', express.static(app.__dirname + '/public/ico'));
+
   const credential = (request = express.request, response = express.response, next) => {
-    response.setHeader('Access-Control-Allow-Origin', '*');
-    response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-    response.setHeader('Access-Control-Allow-Headers', '*');
-    response.setHeader('Access-Control-Allow-Credentials', false);
+    // response.setHeader('Access-Control-Allow-Origin', '*');
+    // response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    // response.setHeader('Access-Control-Allow-Headers', '*');
+    // response.setHeader('Access-Control-Allow-Credentials', false);
     response.setHeader('Server', 'Nodejs');
 
     request.getApp = () => {
@@ -35,11 +41,12 @@ module.exports = function (app = App(), server = express()) {
   server.use(loggable);
   server.use((r, s, n) => middlaware.validate(r, s, n));
 
-  server.use(Api.Root.route, Api.Root.use);
   server.use(Api.Language.route, Api.Language.use);
   server.use(Api.Iten.route, Api.Iten.use);
   server.use(Api.Sync.route, Api.Sync.use);
   server.use(Api.Mark.route, Api.Mark.use);
+  server.use(Api.Collaborator.route, Api.Collaborator.use);
+  server.use(Api.Rent.route, Api.Rent.use);
 
   return this;
 }

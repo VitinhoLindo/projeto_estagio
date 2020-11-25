@@ -16,8 +16,8 @@ class Config {
     try {
       const fs = require('fs');
       
-      let key  = fs.readFileSync('./ssl/key.pem', { encoding: 'utf-8' });
-      let cert = fs.readFileSync('./ssl/cert.pem', { encoding: 'utf-8' });
+      let key  = fs.readFileSync(`${__dirname}/ssl/server.key`);
+      let cert = fs.readFileSync(`${__dirname}/ssl/server.cert`);
 
       model.ssl = { key, cert };
       model.type = 'https'

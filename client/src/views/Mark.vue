@@ -2,7 +2,7 @@
   <div class="marks">
     <app-add @add-click="click" />
 
-    <information-component 
+    <mark-information 
       v-if="detailData" 
       :component="component" 
       :data="detailData" 

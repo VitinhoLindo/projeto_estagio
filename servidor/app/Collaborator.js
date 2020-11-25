@@ -1,15 +1,19 @@
 const Connect = require('../lib/orm/client');
 
-const table = 'marca';
+const table = 'colaborador';
 const timestamp = true;
 const model = {
   id: 'interger',
-  nome: 'required|string'
+  nome: 'required|string',
+  cpf: 'required|string',
+  email: 'required|string',
+  created_at: 'datetime',
+  updated_at: 'datetime'
 }
 
-const encryptData = ['nome'];
+const encryptData = ['nome', 'cpf', 'email'];
 
-class Mark extends Connect {
+class Collaborator extends Connect {
   constructor() { super(); }
 
   static getTimestamp() {
@@ -41,8 +45,8 @@ class Mark extends Connect {
   }
 
   static instance() {
-    return new Mark();
+    return new Collaborator(table, model, timestamp);
   }
 }
 
-module.exports = Mark;
+module.exports = Collaborator;

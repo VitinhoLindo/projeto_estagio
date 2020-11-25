@@ -13,6 +13,16 @@
   "menu-collaborator": "Colaboradores",
   "menu-mark": "Marca",
 
+  "field-name": "Nome",
+  "field-cpf": "CPF",
+  "field-email": "E-mail",
+  "field-model": "Modelo",
+  "field-mark": "Marca",
+  "field-collaborator": "Colaborador",
+  "field-iten": "Iten",
+  "field-expiration": "Data",
+  "field-hour": "Hora",
+
   "delete-data": "Apagar",
   "update-data": "Atualizar",
   "cancel": "Cancelar",
@@ -23,6 +33,8 @@
 
   "create-mark-label": "Criar Marca",
   "create-item-label": "Criar Item",
+  "create-collaborator-label": "Criar Colaborador",
+  "create-rent-label": "Alugar",
 
   "item-name": "Nome",
   "item-model": "Modelo",

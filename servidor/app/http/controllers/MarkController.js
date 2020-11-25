@@ -16,7 +16,7 @@ class MarkController extends BaseController {
       if (!this.cacheCrypto()) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
 
       try {
-        all = await this.encrytOrDecrypt(all, 'decrypt');
+        all = await this.encryptOrDecrypt(all, 'decrypt');
       } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } } }
 
       let validator = this.Validator.make(all, {
@@ -30,14 +30,18 @@ class MarkController extends BaseController {
 
       delete all.id;
       if (!Object.keys(all).length) throw { code: 400, message: 'bad request' };
-      all   = await Mark.encryptOrDecrypt(all, this.app, 'encrypt', new Date());
-      value = await Mark.encryptOrDecrypt(value, this.app, 'decrypt', new Date());
+      value = await Mark.encryptOrDecrypt(value, this.app, 'decrypt', value.updated_at || value.created_at);
+      for(let key in value) {
+        if (all[key]) value[key] = all[key];
+        else value[key] = value[key];
+      };
 
-      for(let key in value) if (all[key]) value[key] = all[key];
-
+      await Mark.encryptOrDecrypt(value, this.app, 'encrypt', new Date());
       await value.save();
+
       value = await Mark.encryptOrDecrypt(value, this.app, 'decrypt', value.updated_at);
-      value = await this.encrytOrDecrypt(value.toJSON(), 'encrypt');
+      value = await this.encryptOrDecrypt(value.toJSON(), 'encrypt');
+
       return this.defaultResponseJSON({ result: { ...value } });
     } catch (error) {
       console.log(error);
@@ -52,7 +56,7 @@ class MarkController extends BaseController {
       if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
 
       try {
-        all = await this.encrytOrDecrypt(all, 'decrypt');
+        all = await this.encryptOrDecrypt(all, 'decrypt');
       } catch (error) {
         throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
       }
@@ -83,12 +87,12 @@ class MarkController extends BaseController {
         await marks.decrypt(this.app, 'decrypt');
         
         try {
-          return this.defaultResponseJSON({ result: await this.encrytOrDecrypt(marks.toArray(), 'encrypt') });
+          return this.defaultResponseJSON({ result: await this.encryptOrDecrypt(marks.toArray(), 'encrypt') });
         } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
       }
  
       try {
-        all = await this.encrytOrDecrypt(all, 'decrypt');
+        all = await this.encryptOrDecrypt(all, 'decrypt');
       } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
 
       let validator = this.Validator.make(all, { 
@@ -106,7 +110,7 @@ class MarkController extends BaseController {
       await mark.decrypt(this.app, 'decrypt');
 
       try {
-        mark = await this.encrytOrDecrypt(mark.first().toJSON(), 'encrypt');
+        mark = await this.encryptOrDecrypt(mark.first().toJSON(), 'encrypt');
         return this.defaultResponseJSON({ result: { ...mark } }); 
       } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
     } catch(error) {
@@ -120,7 +124,7 @@ class MarkController extends BaseController {
       if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
   
       try {
-        all = await this.encrytOrDecrypt(all, 'decrypt');
+        all = await this.encryptOrDecrypt(all, 'decrypt');
       } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } } }
 
       if (!Object.keys(all).length) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
@@ -140,7 +144,7 @@ class MarkController extends BaseController {
       let inserted = await Mark.instance().insert(data);
 
       try {
-        inserted = await this.encrytOrDecrypt(inserted.toJSON(), 'encrypt');
+        inserted = await this.encryptOrDecrypt(inserted.toJSON(), 'encrypt');
         return this.defaultResponseJSON({ result: { ...inserted } });
       } catch (error) { throw { code: 500 }; }
     } catch (error) {

@@ -3,5 +3,7 @@ module.exports = {
   Language: require('./Language'),
   Iten: require('./Iten'),
   Sync: require('./Sync'),
-  Mark: require('./Mark')
+  Mark: require('./Mark'),
+  Collaborator: require('./Collaborator'),
+  Rent: require('./Rent')
 }

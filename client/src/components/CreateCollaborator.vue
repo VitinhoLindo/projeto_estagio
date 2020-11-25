@@ -1,8 +1,8 @@
 <template>
-  <div class="new-iten">
+  <div class="new-collaborator">
     <div class="fields">
       <div class="label">
-        <label>{{ language.labels['create-item-label'] }}</label>
+        <label>{{ language.labels['create-collaborator-label'] }}</label>
       </div>
 
       <div class="values">
@@ -16,19 +16,16 @@
 
         <div class="inputs">
           <div class="field-input">
-            <label>{{ language.labels['field-model'] }}</label>
-            <input type="text" v-model="input.modelo.value">
+            <label>{{ language.labels['field-cpf'] }}</label>
+            <input type="text" v-model="input.cpf.value">
             <span>{{ input.nome.error }}</span>
           </div>
         </div>
 
         <div class="inputs">
           <div class="field-input">
-            <label>{{ language.labels['field-mark'] }}</label>
-            <select v-model="input.marca.value">
-              <option value="" disabled>options</option>
-              <option v-for="(mark, index) in input.marca.values" v-bind:key="index" v-bind:value="mark.id">{{ mark.nome }}</option>
-            </select>
+            <label>{{ language.labels['field-email'] }}</label>
+            <input type="text" v-model="input.email.value">
             <span>{{ input.nome.error }}</span>
           </div>
         </div>
@@ -47,9 +44,6 @@ import LanguageMixin from '../mixins/Language'
 
 export default {
   mixins: [LanguageMixin],
-  mounted() {
-    this.mounted()
-  },
   data() {
     return {
       locked: false,
@@ -59,12 +53,11 @@ export default {
           value: '',
           error: ''
         },
-        modelo: {
+        cpf: {
           value: '',
           error: ''
         },
-        marca: {
-          values: [],
+        email: {
           value: '',
           error: ''
         }
@@ -72,30 +65,10 @@ export default {
     }
   },
   methods: {
-    async mounted() {
-      this.locked = true;
-      this.$app.emit('loading', { on: true });
-
-      try {
-        let { status, code, result, message } = await this.$app.request({
-          url: '/mark',
-          method: 'get',
-          encrypt: true
-        });
-
-        if (status == 'error') throw message;
-
-        this.input.marca.values = result;
-      } catch(error) {
-        this.$app.emit('error', { message: error, show: true });
-      }
-
-      this.$app.emit('loading', { on: false });
-      this.locked = false;
-    },
     async create(event) {
       this.locked = true;
       this.$app.emit('loading', { on: true });
+
 
       try {
         let data = {};
@@ -105,7 +78,7 @@ export default {
         }
 
         let { status, code, result, message } = await this.$app.request({
-          url: '/itens',
+          url: '/collaborators',
           method: 'POST',
           data: data,
           encrypt: true
@@ -114,7 +87,7 @@ export default {
         if (status == 'error') throw message;
 
         this.locked = false;
-        return this.$emit('created-item', event, result);
+        return this.$emit('created-collaborator', event, result);
       } catch(err) {
         this.$app.emit('error', { message: error, show: true });
       }
@@ -132,7 +105,7 @@ export default {
 
 <style lang="scss">
 // 'flex-direction': 'row'
-.new-iten {
+.new-collaborator {
   position: fixed;
   z-index: 5;
   top: 0;
@@ -145,7 +118,7 @@ export default {
   justify-content: center;
 }
 
-.new-iten .fields {
+.new-collaborator .fields {
   min-width: 50%;
   min-height: 35%;
   -webkit-border-radius: 10px;
@@ -156,7 +129,7 @@ export default {
   justify-content: center;
 }
 
-.new-iten .fields .values {
+.new-collaborator .fields .values {
   min-width: 90%;
   min-height: calc(70% - 60px);
   max-height: calc(90% - 60px);
@@ -167,12 +140,12 @@ export default {
   // justify-content: center;
 }
 
-.new-iten .fields .label {
+.new-collaborator .fields .label {
   height: 50px;
   border-bottom: 1px solid #cccccc;
 }
 
-.new-iten .fields .label label {
+.new-collaborator .fields .label label {
   width: 100%;
   height: 20px;
   padding: 0%;
@@ -182,12 +155,12 @@ export default {
   // font-weight: bold;
 }
 
-.new-iten .fields .values .inputs {
+.new-collaborator .fields .values .inputs {
   overflow-y: auto;
   width: 100%;
   // min-height: calc(100% - 50px);
 }
-.new-iten .fields .values .inputs .field-input {
+.new-collaborator .fields .values .inputs .field-input {
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -197,20 +170,20 @@ export default {
   margin: 15px auto;
 }
 
-.new-iten .fields .values .inputs .field-input label {
+.new-collaborator .fields .values .inputs .field-input label {
   text-align: center;
   line-height: 35px;
   width: 30%;
   font-size: 18px;
 }
 
-.new-iten .fields .values .inputs .field-input input {
+.new-collaborator .fields .values .inputs .field-input input {
   padding: 0px 10px;
   width: calc(60% - 20px);
   height: 35px;
 }
 
-.new-iten .fields .values .inputs .field-input select {
+.new-collaborator .fields .values .inputs .field-input select {
   width: 62%;
   height: 35px;
   text-align-last: center;
@@ -218,7 +191,7 @@ export default {
 }
 
 
-.new-iten .fields .buttons {
+.new-collaborator .fields .buttons {
   width: 100%;
   height: 60px;
   display: flex;
@@ -226,7 +199,7 @@ export default {
   justify-content: center;
 }
 
-.new-iten .fields .buttons button {
+.new-collaborator .fields .buttons button {
   -webkit-border-radius: 5px;
   cursor: pointer;
   width: 80px;
@@ -237,33 +210,48 @@ export default {
   border: none;
 }
 
-.new-iten .fields .buttons button:hover {
+.new-collaborator .fields .buttons button:hover {
   background-color: #5cb8c2;
 }
-.new-iten .fields .buttons button:focus {
+.new-collaborator .fields .buttons button:focus {
   // outline: 0;
   background-color: #7ed6df;
 }
 
-.new-iten .fields .buttons button:disabled {
+.new-collaborator .fields .buttons button:disabled {
   cursor: auto;
   background-color: #c5f2f7;
 }
 
 @media only screen and (max-width: 768px) {
-  .new-iten .fields {
+  .new-collaborator .fields {
     width: 95%;
     min-height: 90%;
   }
 
-  .new-iten .fields .values .inputs .field-input {
+  .new-collaborator .fields .values .inputs .field-input {
     flex-direction: column;
     min-height: 70px;
     overflow-y: hidden;
   }
 
-  .new-iten .fields .values .inputs .field-input input {
+  .new-collaborator .fields .values .inputs .field-input input {
     text-align: center;
   }
+  // .information .detail .buttons-detail {
+  //   flex-direction: column;
+  // }
+
+  // .information .detail .fields .field {
+  //   flex-direction: column;
+  // }
+
+  // .information .detail .fields .field .label {
+  //   text-align: center;
+  // }
+
+  // .information .detail .fields .field .value {
+  //   text-align: center;
+  // }
 }
 </style>

@@ -9,20 +9,129 @@ class ItenController extends BaseController {
     return ItenController;
   }
 
+  async option() {
+    return this.defaultResponseJSON();
+  }
+  
   async get() {
-    let itens = Iten.instance();
-    let iten = await itens.get();
-    return this.defaultResponseJSON({ result: { iten } });
+    try {
+      if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
+      
+      let itens = await Iten.instance().get();
+      await itens.decrypt(this.app, 'decrypt');
+      try {
+        itens = await this.encryptOrDecrypt(itens.toArray(), 'encrypt');
+        return this.defaultResponseJSON({ result: itens });
+      } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
+    } catch (error) {
+      return this.sendError(error);      
+    }
   }
 
   async post() {
-    let validator = this.Validator.make(this.all(), Iten.getModel());
+    try {
+      let all = this.all();
 
-    if (validator.fails()) {
-      return this.defaultResponseJSON(validator.modelResponse());
+      if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
+
+      try {
+        all = await this.encryptOrDecrypt(all, 'decrypt');
+      } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
+
+      let validator = this.Validator.make(all, Iten.getModel());
+
+      if (validator.fails() && validator.failedField != 'id') {
+        let model = validator.modelResponse();
+        model.result = await this.encryptOrDecrypt(model.result, 'encrypt');
+        throw model;
+      }
+
+      let data = Iten.getModel(all);
+      data = await Iten.encryptOrDecrypt(data, this.app, 'encrypt', new Date());
+      let inserted = await Iten.instance().insert(data);
+      await Iten.encryptOrDecrypt(inserted, this.app, 'decrypt', inserted.updated_at || inserted.created_at);
+
+      try {
+        inserted = await this.encryptOrDecrypt(inserted.toJSON(), 'encrypt');
+        return this.defaultResponseJSON({ result: { ...inserted } });
+      } catch (error) { throw  { code: 500 }; }
+    } catch (error) {
+      return this.sendError(error);
     }
+  }
 
-    return this.defaultResponseJSON();
+  async put() {
+    try {
+      let all = this.all();
+
+      if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
+
+      try {
+        all = await this.encryptOrDecrypt(all, 'decrypt');        
+      } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
+
+      let validator = this.Validator.make(all, {
+        id: 'required|interger'
+      });
+
+      if (validator.fails()) {
+        let model = validator.modelResponse();
+        model.result = await this.encryptOrDecrypt(model.result, 'encrypt');
+        throw model;
+      }
+
+      const id = all.id;
+      delete all.id;
+      if (!Object.keys(all).length) throw { code: 400, message: 'bad request' };
+
+      let value = await Iten.instance().where({ column: 'id', value: id }).first();
+      if (!value) throw { code: 404, message: 'don\'t found' };
+      await Iten.encryptOrDecrypt(value, this.app, 'decrypt', value.updated_at || value.created_at);
+      for(let key in value) {
+        if (all[key]) value[key] = all[key];
+        else value[key] = value[key];
+      };
+
+      await Iten.encryptOrDecrypt(value, this.app, 'encrypt', new Date());
+      await value.save();
+      
+      await Iten.encryptOrDecrypt(value, this.app, 'decrypt', value.updated_at);
+      value = await this.encryptOrDecrypt(value.toJSON(), 'encrypt');
+
+      return this.defaultResponseJSON({result: { ...value } });
+    } catch (error) {
+      return this.sendError(error);
+    }
+  }
+
+  async delete() {
+    try {
+      let all = this.all();
+  
+      if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
+
+      try {
+        all = await this.encryptOrDecrypt(all, 'decrypt');
+      } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
+
+      let validator = this.Validator.make(all, {
+        id: 'required|interger'
+      });
+
+      if (validator.fails()) {
+        let model = validator.modelResponse();
+        model.result = await this.encryptOrDecrypt(model.result, 'encrypt');
+        return this.defaultResponseJSON(model);
+      }
+
+      let value = await Iten.instance().where({ column: 'id', value: all.id }).first();
+      if (!value) throw { code: 404, message: 'don\'t found' };
+      await value.delete();
+
+      return this.defaultResponseJSON();
+    } catch (error) {
+      return this.sendError(error);
+    }
   }
 }
 
