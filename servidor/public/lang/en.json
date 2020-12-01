@@ -1,34 +1,48 @@
 {
-  "pt-BR": "Portuguese (Brazil)",
+  "pt-BR": "Portuguese (Brazilian)",
   "en": "English (United States)",
   "error-button": "Confirm",
   "error-title": "Error",
 
   "menu-span-title": "Information",
-  "menu-span-content": "Click to show menu",
+  "menu-span-content": "Click to display the menu",
   "menu-span-language": "Click to change language",
 
   "menu-home": "Home page",
-  "menu-iten": "Itens",
+  "menu-iten": "Items",
   "menu-collaborator": "Collaborators",
-  "menu-mark": "Marks",
+  "menu-mark": "Mark",
 
   "field-name": "Name",
   "field-cpf": "CPF",
   "field-email": "E-mail",
+  "field-model": "Model",
+  "field-mark": "Mark",
+  "field-collaborator": "Collaborators",
+  "field-iten": "Item",
+  "field-expiration": "Date",
+  "field-hour": "Hour",
 
   "delete-data": "Delete",
-  "update-data": "Update",
+  "update-data": "Change",
   "cancel": "Cancel",
 
   "label-name": "Name",
-  "label-created": "Created At",
-  "label-updated": "Updated At",
+  "label-created": "Created at",
+  "label-updated": "Updated at",
 
   "create-mark-label": "Create Mark",
-  "create-item-label": "Create Iten",
+  "create-item-label": "Create Item",
+  "create-collaborator-label": "Create Collaborator",
+  "create-rent-label": "Rent",
+
+  "information-mark-label": "Mark information",
+  "information-collaborator-label": "Collaborator information",
+  "information-iten-label": "Item information",
 
   "item-name": "Name",
   "item-model": "Model",
-  "item-mark" : "Mark"
+  "item-mark" : "Mark",
+
+  "select-option": "Options"
 }
