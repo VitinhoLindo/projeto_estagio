@@ -24,7 +24,10 @@ class RentController extends BaseController {
         rents = await this.encryptOrDecrypt(rents.toArray(), 'encrypt');
   
         return this.defaultResponseJSON({ result: rents });
-      } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
+      } catch (error) { 
+        console.log(error);
+        throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; 
+      }
     } catch (error) {
       return this.sendError(error);
     }

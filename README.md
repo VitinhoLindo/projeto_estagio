@@ -177,6 +177,8 @@ CREATE TABLE `colaborador` (
     `nome` LONGTEXT NOT NULL, #encrypt
     `cpf` LONGTEXT NOT NULL, #encrypt
     `email` LONGTEXT NOT NULL, #encrypt
+    `created_at` DATETIME NOT NULL,
+    `updated_at` DATETIME,
     PRIMARY KEY(`ID`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 ;
 
@@ -184,6 +186,8 @@ DROP TABLE IF EXISTS `marca`;
 CREATE TABLE `marca` (
     `id` BIGINT AUTO_INCREMENT,
     `nome` LONGTEXT NOT NULL, #encrypt
+    `created_at` DATETIME NOT NULL,
+    `updated_at` DATETIME,
     PRIMARY KEY(`id`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 ;
 
@@ -193,6 +197,8 @@ CREATE TABLE `iten` (
     `nome` LONGTEXT NOT NULL, #encrypt
     `modelo` LONGTEXT NOT NULL, #encrypt
     `marca` BIGINT NOT NULL,
+    `created_at` DATETIME NOT NULL,
+    `updated_at` DATETIME,
     PRIMARY KEY(`id`),
     FOREIGN KEY(`marca`) REFERENCES `marca`(`id`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 ;
@@ -202,8 +208,9 @@ CREATE TABLE `aluguel` (
     `id` BIGINT AUTO_INCREMENT,
     `colaborador` BIGINT NOT NULL,
     `iten` BIGINT NOT NULL,
-    `crated_at` DATETIME NOT NULL,
     `expiration_at` DATETIME NOT NULL,
+    `created_at` DATETIME NOT NULL,
+    `updated_at` DATETIME,
     PRIMARY KEY(`id`),
     FOREIGN KEY (`colaborador`) REFERENCES `colaborador`(`id`),
     FOREIGN KEY (`iten`) REFERENCES `iten`(`id`)
