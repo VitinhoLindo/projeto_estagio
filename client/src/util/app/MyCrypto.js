@@ -43,7 +43,10 @@ class AppCrypto extends MyEvent {
     let string = '';
     let bytes = new Uint8Array(binary);
 
-    for (let byte of bytes) string += String.fromCharCode(byte);
+    for (let byte of bytes) {
+      string += String.fromCharCode(byte);
+    }
+
     return string;
   }
 
@@ -141,6 +144,36 @@ class AppCrypto extends MyEvent {
     let binaryString = '';
     for (let byte of byteArray) binaryString += String.fromCharCode(byte);
     return btoa(binaryString);
+  }
+
+  hexStringToArrayBuffer(value = '') {
+    let nextIndex = 0;
+    let arrayByffer = new Uint8Array((value.length / 2) ? value.length / 2: 0);
+
+    while (nextIndex < value.length) {
+      let hex = '';
+      if (nextIndex + 2 < value.length) {
+        hex = value.substr(nextIndex, 2);
+      } else {
+        hex = value.substr(nextIndex);
+      }
+      arrayByffer[nextIndex / 2] = parseInt(hex, 16);
+
+      nextIndex += 2;
+    }
+
+    return arrayByffer;
+  }
+
+  arrayBufferToHexString(binary = new ArrayBuffer()) {
+    let byteArray = new Uint8Array(binary);
+    let binaryString = '';
+
+    for (let byte of byteArray) {
+      binaryString += `000${byte.toString('16')}`.slice(-2);
+    }
+
+    return binaryString;
   }
 
   /**
@@ -271,7 +304,7 @@ class AppCrypto extends MyEvent {
 
     try {
       let binary = await this.window.crypto.subtle.exportKey('spki', this.secret.app.publicKey);
-      return this.binaryToPem(binary);
+      return this.arrayBufferToHex(binary);
     } catch (error) {
       console.error("FAILURE: To export public key");
       throw error;
@@ -287,7 +320,7 @@ class AppCrypto extends MyEvent {
    */
   async importPublicKey(pem = '') {
     try {
-      this.secret.server.publicKey = await this.window.crypto.subtle.importKey('spki', this.pemToBinary(pem), {
+      this.secret.server.publicKey = await this.window.crypto.subtle.importKey('spki', this.hexStringToArrayBuffer(pem), {
         name: this.keyAlgorithm,
         hash: this.hashAlgorithm
       }, false, ['encrypt']);
@@ -312,7 +345,7 @@ class AppCrypto extends MyEvent {
   /**
    * @param {*} value 
    * 
-   * return String['encrypt']: base64
+   * return String['encrypt']: hexadecimal
    */
   async encrypt(value = '') {
     let vector = this.getIv();
@@ -322,7 +355,7 @@ class AppCrypto extends MyEvent {
       iv: vector
     }, this.secret.server.publicKey, this.textToArrayBuffer(value));
 
-    return this.arrayBufferToBase64String(encryptBuffer);
+    return this.arrayBufferToHexString(encryptBuffer);
   }
 
   /**
@@ -330,11 +363,11 @@ class AppCrypto extends MyEvent {
    * 
    * return String['decrypt']: 'utf-8'
    */
-  async decrypt(value = '') {
+  async decrypt(value) {
     let decryptBuffer = null, count = 0;
-    let valueBuffer = this.base64StringToArrayBuffer(value);
+    let valueBuffer = this.hexStringToArrayBuffer(value);
 
-    while (count < 10) {
+    while(count < 10) {
       try {
         let vector = this.secret.ivs[count];
 
@@ -360,15 +393,7 @@ class AppCrypto extends MyEvent {
     let ivsBytes = [];
 
     for (let iv of ivs) {
-      let bytes = new Uint8Array(this.ivLen);
-
-      for (let index in iv) {
-        index = parseInt(index);
-
-        bytes[index] = iv[index];
-      }
-
-      ivsBytes.push(bytes);
+      ivsBytes.push(this.hexStringToArrayBuffer(iv));
     }
 
     this.secret.ivs = ivsBytes;
@@ -376,13 +401,13 @@ class AppCrypto extends MyEvent {
 
   async sync(data = { build: false }) {
     let { status, code, message, result } = await this.request({
-      url: '/sync',
+      url: '/75c75efe327a8ef35a072f25117961f5b99e35035dc9bd86493dd29fd7bc07eb',
       method: 'POST',
       data: Object.assign({},
         {
-          pub: await this.exportPublicKey()
+          p: await this.exportPublicKey()
         },
-        data
+        { b: data.build }
       )
     });
 
@@ -390,8 +415,8 @@ class AppCrypto extends MyEvent {
       throw message;
     }
     
-    await this.importPublicKey(result.pub);
-    await this.importIvs(result.ivs);
+    await this.importPublicKey(result.p);
+    await this.importIvs(result.i);
   }
 
   async encryptOrDecryptObject(param, func) {
@@ -401,7 +426,10 @@ class AppCrypto extends MyEvent {
       let value = param[key];
       let _k = await this[func](key), _v;
 
-      if (!value) value = 'null';
+      if (!value) {
+        _v = null;
+        continue;
+      }
       switch (value.constructor.name) {
         case 'Object':
           _v = await this.encryptOrDecryptObject(value, func); break;
@@ -423,7 +451,10 @@ class AppCrypto extends MyEvent {
     for (let value of param) {
       let _v;
 
-      if (!value) value = 'null'; 
+      if (!value) {
+        _v = null;
+        continue;
+      } 
       switch (value.constructor.name) {
         case 'Object':
           _v = await this.encryptOrDecryptObject(value, func); break;
@@ -440,7 +471,7 @@ class AppCrypto extends MyEvent {
   }
 
   async encrytOrDecrypt(value, func) {
-    if (!value) value = 'null';
+    if (!value) return null;
 
     switch (value.constructor.name) {
       case 'String':

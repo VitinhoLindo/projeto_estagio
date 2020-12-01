@@ -53,15 +53,11 @@ class Collection {
     let values = [];
 
     for(let value of this.original) {
-      try {
-        for(let column of model) {
-          value[column] = await app[funcName](value[column], value['updated_at'] || value['created_at']);
-        }
-  
-        values.push(value);
-      } catch (error) {
-        console.log(error);      
+      for(let column of model) {
+        value[column] = await app[funcName](value[column], value['updated_at'] || value['created_at']);
       }
+      
+      values.push(value);
     }
 
     this.original = values;

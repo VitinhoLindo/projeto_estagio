@@ -60,7 +60,6 @@ class RentController extends BaseController {
         return this.defaultResponseJSON({ result: { ...inserted } });
       } catch (error) { throw { code: 500, message: 'Internal server error' }; }
     } catch (error) {
-      console.log(error);
       return this.sendError(error);
     }
   }

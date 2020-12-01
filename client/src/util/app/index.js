@@ -5,28 +5,6 @@ class App extends Language {
   constructor() { super(); }
 
   /**
-   * 
-   */
-  // listen() {
-  //   setInterval(async () => {
-  //     try {
-  //       let { status, code, message, result } = await this.request({
-  //         url: '/sync',
-  //         method: 'GET'
-  //       })
-  
-  //       if (status == 'error') {
-  //         throw message;
-  //       }
-
-  //       if (!result.auth) this.sync({ build: true });
-  //     } catch (error) {
-  //       console.error(error);
-  //     }
-  //   }, 30000);
-  // }
-
-  /**
    * funções que necessitam ser carregadas na inicialização do app
    * 
    * this.navigatorLanguage()[Promise]["obtem linguagem padrão do navegador e busca 
@@ -43,7 +21,6 @@ class App extends Language {
     this.window.onresize = (event) => {
       this.resize(event);
     };
-    // this.listen();
   }
 }
 

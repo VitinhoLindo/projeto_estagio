@@ -125,7 +125,6 @@ class Crypto extends Cache {
 
   async decrypt(value, date = new Date()) {
     let cryptoKey = await this.getCacheDate(date);
-    // console.log(cryptoKey);
 
     if (!cryptoKey) throw `key don't exists ${date.toJSON()}`;
 
@@ -158,6 +157,14 @@ class Crypto extends Cache {
 
     hash.update(value);
     return hash.digest('hex');
+  }
+
+  binaryToHex(binary = new ArrayBuffer()) {
+    return Buffer.from(binary).toString('hex');
+  }
+
+  hexToBinary(hex = '') {
+    return Buffer.from(hex, 'hex');
   }
 
   binaryToPem(binary = new ArrayBuffer(), label = 'RSA PUBLIC KEY') {

@@ -126,7 +126,6 @@ class Middlaware {
       }
       next();
     } catch (error) {
-      console.log(error);
       response.status(500);
       return response.end();
     }

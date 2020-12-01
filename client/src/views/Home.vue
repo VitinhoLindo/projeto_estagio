@@ -69,10 +69,29 @@
 export default {
   name: 'Itens',
   async mounted() {
+    /**
+     * @param mounted
+     *
+     * func: $app.on('resize', callback: (err: String, pid: Number)) void
+     *   <summary>
+     *     listen resize page to change page content
+     *   </summary>
+     *
+     * func: this.getdata() [Promise] void
+     *   <summary>
+     *      call to server in route ['/rent', '/collaborators', '/itens']
+     *      after response set data in content page
+     *   </summary>
+     */
+    this.$app.on('resize', this.handlePage, (err, pid) => {
+      if (err) return this.$app.emit('error', { message: err, show: true });
+      this.rentPid = pid;
+    });
     await this.getData();
   },
   data() {
     return {
+      rentPid: null,
       component: 'itens',
       detailData: null,
       detailOffset: { x: 0, y: 0 },
@@ -84,14 +103,41 @@ export default {
     }
   },
   methods: {
+    /**
+     * @param {*} id
+     *
+     * <summary>
+     *    get name of collaborator using id
+     * </summary>
+     * 
+     * return String;
+     */
     getCollaborator(id) {
       let value = this.collaborators.filter((a) => a.id == id);
       return value[0].nome;
     },
+    /**
+     * @param {*} id
+     *
+     * <summary>
+     *    get name of iten using id
+     * </summary>
+     *
+     * return String;
+     */
     getIten(id) {
       let value = this.itens.filter((a) => a.id == id);
       return value[0].nome;
     },
+    /**
+     * @param {*} count try five attempts to receive data
+     * @param {*} error message error to emit error modal
+     *
+     * <summary>
+     *    get data in request call to server
+     * </summary>
+     * return void;
+     */
     async getData(count = 0, error = '') {
       if (count == 5) {
         this.$app.emit('loading', { on: false });
@@ -125,30 +171,21 @@ export default {
         this.collaborators = collaborators.result;
         this.itens         = itens.result;
         this.data          = rents.result;
-      } catch (error) {
-        return this.getData(count++, error);
+      } catch (err) {
+        return this.getData(count++, err);
       }
 
       this.handlePage();
     },
-    dataClick(event, line, offset) {
-      this.detailData = line;
-      this.detailOffset = offset;
-    },
-    closeDetail() {
-      this.detailData = null;
-      this.detailOffset = { x: 0, y: 0 };
-    },
-    async updateData(event, resource) {
-      this.data[this.detailData.originalX] = resource;
-      this.closeDetail();
-      this.handlePage();
-    },
-    deletedData() {
-      this.data.splice(this.detailData.originalX, 1);
-      this.closeDetail();
-      this.handlePage();
-    },
+    /**
+     * <summary>
+     *   create matrix of array
+     *   
+     *   define total data per row
+     * </summary>
+     * 
+     * return void;
+     */
     handlePage() {
       this.pageLists = [];
       let { innerWidth, innerHeight } = this.$app.getOffSet();
@@ -176,18 +213,116 @@ export default {
       this.pageLists = linesData;
       this.$app.emit('loading', { on: false });
     },
+    /**
+     * @param {*} event  MouseEvent
+     * @param {*} line   {any}
+     * @param {*} offset { x: Number, y: Number }
+     *
+     * <summary>
+     *    show to detail modal
+     * </summary>
+     *
+     * return void;
+     */
+    dataClick(event, line, offset) {
+      this.detailData = line;
+      this.detailOffset = offset;
+    },
+    /**
+     * <summary>
+     *    close detail modal
+     * </summary>
+     *
+     * return void;
+     */
+    closeDetail() {
+      this.detailData = null;
+      this.detailOffset = { x: 0, y: 0 };
+    },
+    /**
+     * @param {*} event    MouseEvent
+     * @param {*} resource {any}
+     *
+     * <summary>
+     *    change last data to new data
+     *    call close detail modal
+     *    call to change content page
+     * </summary>
+     *
+     * return void;
+     */
+    async updateData(event, resource) {
+      this.data[this.detailData.originalX] = resource;
+      this.closeDetail();
+      this.handlePage();
+    },
+    /**
+     * <summary>
+     *    remove last data
+     *    call close detail modal
+     *    call to change content page
+     * </summary>
+     *
+     * return void;
+     */
+    deletedData() {
+      this.data.splice(this.detailData.originalX, 1);
+      this.closeDetail();
+      this.handlePage();
+    },
+    /**
+     * @param {*} event    MouseEvent
+     * @param {*} resource {any}
+     *
+     * <summary>
+     *    change last data to new data
+     *    call close detail modal
+     *    call to change content page
+     * </summary>
+     *
+     * return void;
+     */
     created(event, resource) {
       this.data.push(resource);
       this.createMark = false;
       this.handlePage();
     },
+    /**
+     * @param {*} event    MouseEvent
+     *
+     * <summary>
+     *   set flag to show create modal
+     * </summary>
+     *
+     * return void;
+     */
     click(event) {
       this.createMark = true;
     },
+    /**
+     * @param {*} event    MouseEvent
+     *
+     * <summary>
+     *   set flag to close create modal
+     * </summary>
+     *
+     * return void;
+     */
     cancel(event) {
       this.createMark = false;
     }
   },
+  unmounted() {
+    /**
+     * @param unmounted
+     * 
+     * <summary>
+     *    ao remover o component o metodo unmounted do vue é acionado
+     *    quando for acionado remove o listiner atravez do pid do listiner
+     * </summary>
+    */
+    this.$app.removeListiner('resize', this.rentPid);
+  }
 }
 </script>
 

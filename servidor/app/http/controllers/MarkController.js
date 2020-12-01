@@ -44,7 +44,6 @@ class MarkController extends BaseController {
 
       return this.defaultResponseJSON({ result: { ...value } });
     } catch (error) {
-      console.log(error);
       return this.sendError(error);
     }
   }
@@ -54,25 +53,34 @@ class MarkController extends BaseController {
 
     try {
       if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
-
+      
       try {
         all = await this.encryptOrDecrypt(all, 'decrypt');
       } catch (error) {
         throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
       }
-
+      
       let validator = this.Validator.make(all, { 
         id: 'required|interger' 
       });
-
+      
       if (validator.fails()) throw { code: 400, message: 'bad request' };
-
+      
       let value = await Mark.instance().where({ 'column': 'id', value: all.id }).first();
-      await value.delete();
 
-      return this.defaultResponseJSON();
+      try {
+        await value.delete();
+  
+        return this.defaultResponseJSON();
+      } catch (error) {
+        if (error.errno == 1451) {
+          throw { code: 400, message: 'not possible delete this iten' };
+        } else {
+          throw { code: 400, message: 'bad request' };
+        }
+      }
     } catch (error) {
-      this.sendError(error);
+      return this.sendError(error);
     }
   }
   
@@ -127,21 +135,25 @@ class MarkController extends BaseController {
         all = await this.encryptOrDecrypt(all, 'decrypt');
       } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } } }
 
-      if (!Object.keys(all).length) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
-
-      let validator = this.Validator.make(all, Mark.getModel(), { 
+      let validator = this.Validator.make(all, {
+        nome: 'required|string|min:5'
+      }, { 
         nome: {
           required: 'nome is required',
           string: 'nome type is string'
         } 
       });
 
-      if (validator.fails()) throw validator.modelResponse();
+      if (validator.fails()) {
+        let model = validator.modelResponse();
+        model.result = await this.encryptOrDecrypt(model.result, 'encrypt');
+        throw model;
+      }
 
-      let data = Mark.getModel(all);
-      data = await Mark.encryptOrDecrypt(data, this.app, 'encrypt', new Date());
+      all = await Mark.encryptOrDecrypt(all, this.app, 'encrypt', new Date());
       
-      let inserted = await Mark.instance().insert(data);
+      let inserted = await Mark.instance().insert(all);
+      await Mark.encryptOrDecrypt(inserted, this.app, 'decrypt', inserted.updated_at || inserted.created_at);
 
       try {
         inserted = await this.encryptOrDecrypt(inserted.toJSON(), 'encrypt');

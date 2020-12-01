@@ -11,10 +11,10 @@ module.exports = function (app = App(), server = express()) {
   server.use('/ico', express.static(app.__dirname + '/public/ico'));
 
   const credential = (request = express.request, response = express.response, next) => {
-    // response.setHeader('Access-Control-Allow-Origin', '*');
-    // response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-    // response.setHeader('Access-Control-Allow-Headers', '*');
-    // response.setHeader('Access-Control-Allow-Credentials', false);
+    response.setHeader('Access-Control-Allow-Origin', '*');
+    response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    response.setHeader('Access-Control-Allow-Headers', '*');
+    response.setHeader('Access-Control-Allow-Credentials', false);
     response.setHeader('Server', 'Nodejs');
 
     request.getApp = () => {

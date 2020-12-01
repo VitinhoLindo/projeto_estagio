@@ -11,6 +11,8 @@
           <div class="field-input" :style="style">
             <label>{{ language.labels['item-name'] }}</label>
             <input type="text" v-model="markInput.nome.value">
+          </div>
+          <div class="error">
             <span>{{ markInput.nome.error }}</span>
           </div>
         </div>
@@ -45,39 +47,71 @@ export default {
       },
       style: {
         'flex-direction': 'row'
-      }
+      },
+      count: 0
     }
   },
   methods: {
-    async create(event) {
+    async create(event, count = 0, error = '') {
       this.locked = true;
       this.$app.emit('loading', { on: true });
 
+      let req = {
+        success: null,
+        error: null,
+        trying: 0,
+        maxTrying: 5
+      };
 
-      try {
-        let data = {};
-
-        for(let key in this.markInput) {
-          data[key] = this.markInput[key].value;
-        }
-
-        let { status, code, result, message } = await this.$app.request({
-          url: '/mark',
-          method: 'POST',
-          data: data,
-          encrypt: true
-        });
-
-        if (status == 'error') throw message;
-
-        this.locked = false;
-        return this.$emit('created-mark', event, result);
-      } catch(err) {
-        this.app.$emit('error', { message: error, show: true });
+      let data = {};
+      for(let key in this.markInput) {
+        data[key] = this.markInput[key].value;
       }
 
-      this.$app.emit('loading', { on: false });
+      while(req.trying < req.maxTrying) {
+        try {
+          let { status, code, result, message } = await this.$app.request({
+            url: '/mark',
+            method: 'POST',
+            data: data,
+            encrypt: true
+          });
+
+          if (status != 'error') {
+            req.success = result;
+            break;
+          } else {
+            if (!result.error) {
+              throw message;
+            } else {
+              this.setErrorFields(result.error);
+              break;
+            }
+          }
+        } catch(err) {
+          req.trying++;
+          req.error = err;
+        }
+      }
+
       this.locked = false;
+      this.$app.emit('loading', { on: false });
+
+      if (req.success) {
+        return this.$emit('created-mark', event, req.success);
+      } 
+      if (req.error) {
+        return this.$emit('error', { message: req.error, show: true });
+      }
+    },
+    showError(error = '') {
+      return this.$app.emit('error', { message: error, show: true });
+    },
+    setErrorFields(error = {}) {
+      for(let key in error) {
+        if (!this.markInput[key]) continue;
+        this.markInput[key].error = error[key];
+      }
     },
     cancel(event) {
       this.locked = true;
@@ -114,109 +148,143 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+}
 
-  .fields {
-    width: 50%;
-    height: 35%;
-    -webkit-border-radius: 10px;
-    background-color: #ffffff;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+.new-mark .fields {
+  padding: 10px;
+  min-width: 40%;
+  -webkit-border-radius: 10px;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
 
-    .values {
-      width: 90%;
-      height: calc(95% - 60px);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      // justify-content: center;
+.new-mark .fields .values {
+  width: 90%;
+  height: calc(95% - 60px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-      .label {
-        height: 50px;
-        border-bottom: 1px solid #cccccc;
-        label {
-          width: 100%;
-          height: 20px;
-          padding: 0%;
-          font-size: 1.17em;
-          color: #cccccc;
-          // display: block;
-          // font-weight: bold;
-        }
-      }
+.new-mark .fields .values .label {
+  padding: 5px;
+  max-height: 50px;
+}
 
-      .inputs {
-        overflow-y: auto;
-        width: 100%;
-        height: calc(100% - 50px);
+.new-mark .fields .values .label label {
+  width: 100%;
+  min-height: 20px;
+  padding: 0%;
+  font-size: 1.17em;
+  color: #cccccc;
+}
 
-        .field-input {
-          display: flex;
-          flex-direction: row;
-          justify-content: center;
-          align-items: center;
-          width: 100%;
-          height: 40px;
-          margin: 15px auto;
+.new-mark .fields .values .inputs {
+  overflow-y: auto;
+  width: 100%;
+}
 
-          label {
-            text-align: center;
-            line-height: 35px;
-            width: 30%;
-            font-size: 18px;
-          }
+.new-mark .fields .values .inputs .field-input {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: calc(100% - 12px);
+  padding: 5px;
+  margin: 15px auto;
+  -webkit-border-radius: 5px;
+  border: 1px solid #cccccc;
 
-          input {
-            padding: 0px 10px;
-            width: calc(60% - 20px);
-            height: 35px;
-          }
+  label {
+    text-align: center;
+    line-height: 35px;
+    width: 30%;
+    font-size: 18px;
+  }
 
-          select {
-            width: 62%;
-            height: 35px;
-            text-align-last: center;
-            font-size: 16px;
-          }
-        }
-      }
-    }
+  input {
+    border: 1px solid #cccccc;
+    padding: 0px 10px;
+    width: calc(60% - 20px);
+    height: 35px;
+    -webkit-border-radius: 5px;
+  }
 
+  input:focus {
+    outline: 0;
+    border: 1px solid #0984e3;
+  }
 
-    .buttons {
-      width: 100%;
-      height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+  select {
+    width: 62%;
+    height: 35px;
+    text-align-last: center;
+    font-size: 16px;
+  }
+}
 
-      button {
-        -webkit-border-radius: 5px;
-        cursor: pointer;
-        width: 80px;
-        height: 35px;
-        margin: auto 5px;
-        background-color: #7ed6df;
-        color: #ffffff;
-        border: none;
-      }
+.new-mark .fields .values .inputs .error {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
 
-      button:hover {
-        background-color: #5cb8c2;
-      }
+  span {
+    margin-top: -10px;
+    color: red;
+    font-size: 12px;
+    width: calc(75% - 20px);
+    text-align: center;
+  }
+}
 
-      button:focus {
-        // outline: 0;
-        background-color: #7ed6df;
-      }
+.new-mark .fields .buttons {
+  width: 100%;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-      button:disabled {
-        cursor: auto;
-        background-color: #c5f2f7;
-      }
-    }
+  button {
+    -webkit-border-radius: 5px;
+    cursor: pointer;
+    width: 80px;
+    height: 35px;
+    margin: auto 5px;
+    background-color: #7ed6df;
+    color: #ffffff;
+    border: none;
+  }
+
+  button:hover {
+    background-color: #5cb8c2;
+  }
+
+  button:focus {
+    outline: 0;
+    background-color: #7ed6df;
+  }
+
+  button:disabled {
+    cursor: auto;
+    background-color: #c5f2f7;
+  }
+}
+
+@media only screen and (max-width: 768px) {
+  .new-mark .fields {
+    min-width: 70%;
+  }
+
+  .new-mark .fields .values .inputs .field-input {
+    border: none;
+  }
+
+  .new-mark .fields .values .inputs .error span {
+    margin-top: -17px;
+    width: 100%;
   }
 }
 </style>

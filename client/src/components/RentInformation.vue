@@ -1,6 +1,10 @@
 <template>
   <div class="information" v-if="processedData">
     <div class="detail">
+      <div class="info">
+        <label>{{ language.labels['create-rent-label'] }}</label>
+      </div>
+
       <div class="fields">
 
         <div class="field">
@@ -169,8 +173,6 @@ export default {
           encrypt: true
         });
 
-        console.log(code, message, result, status);
-
         if (status == 'error') throw message;
         return this.$emit('updated', event, result);
       } catch(error) {
@@ -242,6 +244,20 @@ export default {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  -webkit-border-radius: 5px;
+}
+
+.information .detail .info {
+  height: 50px;
+  border-bottom: 1px solid #cccccc;
+}
+
+.information .detail .info label {
+  width: 100%;
+  height: 20px;
+  padding: 0%;
+  font-size: 1.17em;
+  color: #cccccc;
 }
 
 .information .detail .fields {
@@ -251,14 +267,16 @@ export default {
 }
 
 .information .detail .fields .field {
-  width: 100%;
-  margin: 10px auto;
+  -webkit-border-radius: 5px;
+  width: calc(100% - 20px);
+  padding: 10px 10px;
+  margin: 5px auto;
   display: flex;
   flex-direction: row;
+  border: 1px solid #cccccc;
 }
 
 .information .detail .fields .field div {
-  // padding: 5px;
 }
 
 .information .detail .fields .field .label {
@@ -267,8 +285,9 @@ export default {
 }
 
 .information .detail .fields .field .value {
-  width: 70%;
-  text-align: left;
+  width: calc(70% - 20px);
+  padding: 0px 10px;
+  text-align: center;
 }
 
 .information .detail .fields .field:nth-child(-n+4)>.value {
@@ -320,7 +339,8 @@ export default {
 
 @media only screen and (max-width: 768px) {
   .information .detail {
-    width: 60%;
+    width: 90%;
+    padding: 10px;
     min-width: 350px;
   }
   .information .detail .buttons-detail {

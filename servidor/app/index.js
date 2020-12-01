@@ -31,6 +31,7 @@ class App extends Storage {
     this.intervals();
     // server listen
     this.cryptoListen();
+
     server.listen(options.listen, this.print([{ message: `${options.type}://${options.listen.host}:${options.listen.port}`, color: 'blue' }]));
   }
 }

@@ -102,7 +102,6 @@ class Connect {
     try {
       var table = this.constructor.getTable();
       data = this.validateData(data);
-      console.log(data);
 
       return new Promise((resolve, reject) => {
         this.client.query(`INSERT INTO \`${table}\` SET ?`, data, async (err, result) => {

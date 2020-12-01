@@ -7,15 +7,18 @@
 
       <div class="values">
         <div class="inputs">
+
           <div class="field-input">
             <label>{{ language.labels['field-collaborator'] }}</label>
             <select v-model="input.colaborador.value">
-              <option value="" disabled>{{ 'options' }}</option>
+              <option value="" disabled>{{ language.labels['select-option'] }}</option>
               <option v-for="(colaborador, index) in input.colaborador.values" v-bind:key="index" v-bind:value="colaborador.id">
                 {{ colaborador.nome }}
               </option>
-              <span>{{ input.colaborador.error }}</span>
             </select>
+          </div>
+          <div class="error">
+            <span>{{ input.colaborador.error }}</span>
           </div>
         </div>
 
@@ -23,12 +26,14 @@
           <div class="field-input">
             <label>{{ language.labels['field-iten'] }}</label>
             <select v-model="input.iten.value">
-              <option value="" disabled>{{ 'options' }}</option>
+              <option value="" disabled>{{ language.labels['select-option'] }}</option>
               <option v-for="(iten, index) in input.iten.values" v-bind:key="index" v-bind:value="iten.id">
                 {{ iten.nome }}
               </option>
-              <span>{{ input.iten.error }}</span>
             </select>
+          </div>
+          <div class="error">
+            <span>{{ input.iten.error }}</span>
           </div>
         </div>
 
@@ -36,6 +41,8 @@
           <div class="field-input">
             <label>{{ language.labels['field-expiration'] }}</label>
             <input type="date" v-model="input.expiration_at.date">
+          </div>
+          <div class="error">
             <span>{{ input.expiration_at.error }}</span>
           </div>
         </div>
@@ -44,6 +51,8 @@
           <div class="field-input">
             <label>{{ language.labels['field-hour'] }}</label>
             <input type="time" v-model="input.expiration_at.time">
+          </div>
+          <div class="error">
             <span>{{ input.expiration_at.error }}</span>
           </div>
         </div>
@@ -148,7 +157,18 @@ export default {
           encrypt: true
         });
 
-        if (status == 'error') throw message;
+        if (status == 'error') {
+          if (result.error) {
+            for(let key in result.error) {
+              this.input[key].error = result.error[key];
+              console.log(key);
+            }
+            this.locked = false;
+            this.$app.emit('loading', { on: false });
+            return;
+          }
+          else throw message;
+        }
 
         this.locked = false;
         return this.$emit('created-item', event, result);
@@ -200,7 +220,6 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  // justify-content: center;
 }
 
 .new-rent .fields .label {
@@ -214,15 +233,27 @@ export default {
   padding: 0%;
   font-size: 1.17em;
   color: #cccccc;
-  // display: block;
-  // font-weight: bold;
 }
 
 .new-rent .fields .values .inputs {
   overflow-y: auto;
   width: 100%;
-  // min-height: calc(100% - 50px);
 }
+
+.new-rent .fields .values .inputs .error {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.new-rent .fields .values .inputs .error span {
+  margin-top: -10px;
+  color: red;
+  font-size: 12px;
+  width: calc(75% - 20px);
+  text-align: center;
+}
+
 .new-rent .fields .values .inputs .field-input {
   display: flex;
   flex-direction: row;

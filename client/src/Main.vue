@@ -37,24 +37,20 @@ body {
 }
 
 .panel {
-  // .add {
-  //   width: 95%;
-  //   height: 45px;
-  //   display: flex;
-  //   // justify-content: center;
-  //   align-items: center;
-
-  //   div {
-  //     border-top-left-radius: 5px;
-  //     border-top-right-radius: 5px;
-  //     width: 100px;
-  //     height: 35px;
-  //     margin: auto 5px;
-  //     background-color: #ffffff;
-  //   }
-  // }
-  // margin: 2.5%;
   width: 95%;
   height: 95%;
+}
+
+
+*::-webkit-scrollbar-track {}
+*::-webkit-scrollbar {
+    width: 2px;
+    height: 2px;
+    background-color: #ffffff;
+}
+*::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    -webkit-box-shadow: inset 0 0 6px #aaaaaa;
+    background-color: #aaaaaa;
 }
 </style>

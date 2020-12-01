@@ -69,31 +69,55 @@ export default {
       this.locked = true;
       this.$app.emit('loading', { on: true });
 
+      let req = {
+        success: null,
+        error: null,
+        trying: 0,
+        maxTrying: 5
+      };
 
-      try {
-        let data = {};
+      let data = {};
 
-        for(let key in this.input) {
-          data[key] = this.input[key].value;
-        }
-
-        let { status, code, result, message } = await this.$app.request({
-          url: '/collaborators',
-          method: 'POST',
-          data: data,
-          encrypt: true
-        });
-
-        if (status == 'error') throw message;
-
-        this.locked = false;
-        return this.$emit('created-collaborator', event, result);
-      } catch(err) {
-        this.$app.emit('error', { message: error, show: true });
+      for(let key in this.input) {
+        data[key] = this.input[key].value;
       }
 
-      this.$app.emit('loading', { on: false });
+      while(req.trying < req.maxTrying) {
+        try {
+          let { status, code, result, message } = await this.$app.request({
+            url: '/collaborators',
+            method: 'POST',
+            data: data,
+            encrypt: true
+          });
+
+          if (status == 'error') throw (result.error || message);
+
+          req.success = result;
+          break;
+        } catch(err) {
+          req.error = err;
+          req.trying++;
+          continue;
+        }
+      }
+
+
       this.locked = false;
+      this.$app.emit('loading', { on: false });
+
+      if (req.success) {
+        return this.$emit('created-collaborator', event, req.success);
+      } else {
+        if (typeof req.error == 'string') return this.$app.emit('error', { message: req.error, show: true });
+        else return this.setError(req.error);
+      }
+    },
+    setError(error = {}) {
+      for(let key in error) {
+        if (this.input[key]) 
+          this.input[key] = error[key];
+      }
     },
     cancel(event) {
       this.locked = true;
@@ -104,7 +128,6 @@ export default {
 </script>
 
 <style lang="scss">
-// 'flex-direction': 'row'
 .new-collaborator {
   position: fixed;
   z-index: 5;
@@ -137,7 +160,6 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  // justify-content: center;
 }
 
 .new-collaborator .fields .label {
@@ -151,14 +173,11 @@ export default {
   padding: 0%;
   font-size: 1.17em;
   color: #cccccc;
-  // display: block;
-  // font-weight: bold;
 }
 
 .new-collaborator .fields .values .inputs {
   overflow-y: auto;
   width: 100%;
-  // min-height: calc(100% - 50px);
 }
 .new-collaborator .fields .values .inputs .field-input {
   display: flex;
@@ -214,7 +233,6 @@ export default {
   background-color: #5cb8c2;
 }
 .new-collaborator .fields .buttons button:focus {
-  // outline: 0;
   background-color: #7ed6df;
 }
 
@@ -238,20 +256,5 @@ export default {
   .new-collaborator .fields .values .inputs .field-input input {
     text-align: center;
   }
-  // .information .detail .buttons-detail {
-  //   flex-direction: column;
-  // }
-
-  // .information .detail .fields .field {
-  //   flex-direction: column;
-  // }
-
-  // .information .detail .fields .field .label {
-  //   text-align: center;
-  // }
-
-  // .information .detail .fields .field .value {
-  //   text-align: center;
-  // }
 }
 </style>

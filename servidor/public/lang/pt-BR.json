@@ -36,7 +36,13 @@
   "create-collaborator-label": "Criar Colaborador",
   "create-rent-label": "Alugar",
 
+  "information-mark-label": "Informação da Marca",
+  "information-collaborator-label": "Informação do colaborador",
+  "information-iten-label": "Informação do Iten",
+
   "item-name": "Nome",
   "item-model": "Modelo",
-  "item-mark" : "Marca"
+  "item-mark" : "Marca",
+
+  "select-option": "opções"
 }

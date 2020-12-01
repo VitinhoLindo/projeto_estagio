@@ -1,38 +1,74 @@
 <template>
   <div class="information" v-if="processedData">
     <div class="detail">
+      <div class="label-form">
+        <label>{{ language.labels['information-iten-label'] }}</label>
+      </div>
+
       <div class="fields">
 
         <div class="field">
-          <div class="label">{{ language.labels['label-name'] }}</div>
-          <div class="value" v-if="!processed.nome.update" v-on:click="updateData('nome')">{{ processed.nome.value }}</div>
-          <div class="value" v-else v-on:input="changeData('nome')" v-on:mouseleave="changeData('nome')"><input type="text" v-model="processed.nome.modified"></div>
+
+          <div class="content">
+            <div class="label">
+              {{ language.labels['label-name'] }}
+            </div>
+            <div class="value" v-if="!processed.nome.update" v-on:click="updateData('nome')">
+              {{ processed.nome.value }}
+            </div>
+            <div class="value" v-else v-on:input="changeData('nome')" v-on:mouseleave="changeData('nome')">
+              <input type="text" v-model="processed.nome.modified">
+            </div>
+          </div>
+
         </div>
 
         <div class="field">
-          <div class="label">{{ language.labels['field-model'] }}</div>
-          <div class="value" v-if="!processed.modelo.update" v-on:click="updateData('modelo')">{{ processed.modelo.value }}</div>
-          <div class="value" v-else v-on:input="changeData('modelo')" v-on:mouseleave="changeData('modelo')"><input type="text" v-model="processed.modelo.modified"></div>
-        </div>
-
-        <div class="field">
-          <div class="label">{{ language.labels['field-mark'] }}</div>
-          <div class="value" v-if="!processed.marca.update" v-on:click="updateData('marca')">{{ marca }}</div>
-          <div class="value" v-else v-on:input="changeData('marca')" v-on:mouseleave="changeData('marca')">
-            <select v-model="processed.marca.modified">
-              <option v-for="(mark, index) in marks" v-bind:value="mark.id" v-bind:key="index">{{ mark.nome }}</option>
-            </select>
+          <div class="content">
+            <div class="label">{{ language.labels['field-model'] }}</div>
+            <div class="value" v-if="!processed.modelo.update" v-on:click="updateData('modelo')">{{ processed.modelo.value }}</div>
+            <div class="value" v-else v-on:input="changeData('modelo')" v-on:mouseleave="changeData('modelo')"><input type="text" v-model="processed.modelo.modified"></div>
           </div>
         </div>
 
         <div class="field">
-          <div class="label">{{ language.labels['label-created'] }}</div>
-          <div class="value">{{ getLocalDate(processed.created_at.value) }}</div>
+          <div class="content">
+            <div class="label">
+              {{ language.labels['field-mark'] }}
+            </div>
+            <div class="value" v-if="!processed.marca.update" v-on:click="updateData('marca')">
+              {{ marca }}
+            </div>
+            <div class="value" v-else v-on:input="changeData('marca')" v-on:mouseleave="changeData('marca')">
+              <select v-model="processed.marca.modified">
+                <option v-for="(mark, index) in marks" v-bind:value="mark.id" v-bind:key="index">
+                  {{ mark.nome }}
+                </option>
+              </select>
+            </div>
+          </div>
         </div>
 
-        <div class="field">
-          <div class="label">{{ language.labels['label-updated'] }}</div>
-          <div class="value">{{ getLocalDate(processed.updated_at.value) }}</div>
+        <div class="field" v-if="processed.created_at">
+          <div class="content">
+            <div class="label">
+              {{ language.labels['label-created'] }}
+            </div>
+            <div class="value">
+              {{ getLocalDate(processed.created_at.value) }}
+            </div>
+          </div>
+        </div>
+
+        <div class="field" v-if="processed.updated_at">
+          <div class="content">
+            <div class="label">
+              {{ language.labels['label-updated'] }}
+            </div>
+            <div class="value">
+              {{ getLocalDate(processed.updated_at.value) }}
+            </div>
+          </div>
         </div>
 
       </div>
@@ -104,32 +140,51 @@ export default {
     async updatedData(event) {
       this.$app.emit('loading', { on: true });
 
-      try {
-        let updated = {};
+      let req = {
+        success: null,
+        error: null,
+        trying: 0,
+        maxTrying: 5
+      }
 
-        for(let key in this.processed) {
-          if (key == 'id') {
-            updated[key] = this.processed[key].value;
-          }
-          if (this.processed[key].value != this.data[key]) {
-            updated[key] = this.processed[key].value;
-          }
+      let updated = {};
+
+      for(let key in this.processed) {
+        if (key == 'id') {
+          updated[key] = this.processed[key].value;
         }
+        if (this.processed[key].value != this.data[key]) {
+          updated[key] = this.processed[key].value;
+        }
+      }
 
-        let { code, message, result, status } = await this.$app.request({
-          url: '/itens',
-          method: 'put',
-          data: updated,
-          encrypt: true
-        });
+      while(req.trying < req.maxTrying) {
+        try {
+          let { code, message, result, status } = await this.$app.request({
+            url: '/itens',
+            method: 'put',
+            data: updated,
+            encrypt: true
+          });
 
-        if (status == 'error') throw message;
-        return this.$emit('updated', event, result);
-      } catch(error) {
-        this.$app.emit('error', { message: error, show: true });
+          if (status == 'error') throw (result.error || message);
+
+          req.success = result;
+          break;
+        } catch(error) {
+          req.error = error;
+          req.trying++;
+          continue;
+        }
       }
 
       this.$app.emit('loading', { on: false });
+      if (req.success) {
+        return this.$emit('updated', event, req.success);
+      } else {
+        if (typeof req.error == 'string') return this.$app.emit('error', { message: req.error, show: true });
+        else return this.showError(req.error);
+      }
     },
     async deleteData() {
       this.$app.emit('loading', { on: true });
@@ -151,9 +206,20 @@ export default {
 
       this.$app.emit('loading', { on: false });
     },
+    /**
+     *
+     *
+     *
+     */
     cancelUpdate() {
       for(let key in this.processed) {
         this.processed[key].update = false;
+      }
+    },
+    showError(error = {}) {
+      for (let key in error) {
+        if (this.processed[key])
+          this.processed[key].error = error[key];
       }
     },
     async changeData(key) {
@@ -201,9 +267,9 @@ export default {
 }
 
 .information .detail {
-  padding: 1% 1.5%;
-  max-width: 90%;
-  max-height: 95%;
+  padding: 10px;
+  width: 25%;
+  min-width: 400px;
   position: absolute;
   z-index: 5;
   background-color: rgba($color: #ffffff, $alpha: 1.0);
@@ -214,36 +280,56 @@ export default {
 }
 
 .information .detail .fields {
-  margin: 5%;
-  min-width: 70%;
+  min-width: 100%;
   height: 90%;
 }
 
-.information .detail .fields .field {
-  display: flex;
-  flex-direction: row;
-  margin: 10px auto;
+.information .detail .label-form {
+  text-align: center;
+  height: 50px;
 }
 
-.information .detail .fields .field:nth-child(-n+3)>.value {
+.information .detail .label-form label {
+  width: 100%;
+  height: 20px;
+  font-size: 1.17em;
+  color: #cccccc;
+}
+
+.information .detail .fields .field {
+  -webkit-border-radius: 5px;
+  border: 1px solid #cccccc;
+  margin-bottom: 5px;
+}
+
+.information .detail .fields .field .content {
+  display: flex;
+  flex-direction: row;
+}
+
+.information .detail .fields .field .content:nth-child(1)>.value {
   cursor: pointer;
   color: rgba($color: #3498db, $alpha: 1.0)
 }
 
-
-
-.information .detail .fields .field div {
+.information .detail .fields .field .content div {
   padding: 5px;
 }
 
-.information .detail .fields .field .label {
-  min-width: 100px;
+.information .detail .fields .field .content .label {
+  width: 45%;
+  line-height: 25px;
   text-align: right;
 }
 
-.information .detail .fields .field .value {
-  min-width: 140px;
+.information .detail .fields .field .content .value {
+  width: 55%;
+  line-height: 25px;
   text-align: left;
+}
+
+.information .detail .fields .field .content .value input {
+  width: 95%;
 }
 
 .information .detail .buttons-detail {
@@ -259,7 +345,7 @@ export default {
 .information .detail .buttons-detail div {
   -webkit-border-radius: 5px;
   cursor:pointer;
-  margin: 5px 5px;
+  margin: 5px;
   min-width: 70px;
   max-width: 33.3%;
   padding: 9px;
@@ -287,31 +373,16 @@ export default {
 
 @media only screen and (max-width: 768px) {
   .information .detail {
-    width: 60%;
-    min-width: 350px;
-  }
-  .information .detail .buttons-detail {
-    flex-direction: row;
+    min-width: 90%;
   }
 
-  .information .detail .fields {
-    min-width: 80%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .information .detail .fields .field {
-    flex-direction: row;
-  }
-
-  .information .detail .fields .field .label {
+  .information .detail .fields .field .content .label {
     text-align: center;
   }
 
-  .information .detail .fields .field .value {
+  .information .detail .fields .field .content .value {
     text-align: center;
+    word-wrap: break-word;
   }
 }
 </style>

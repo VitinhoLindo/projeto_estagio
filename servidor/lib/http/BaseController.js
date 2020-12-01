@@ -39,6 +39,37 @@ class BaseController {
     return ivs[index];
   }
 
+  async decrypt(value) {
+    let cache = this.app.getCache(this.request.socket.remoteAddress);
+
+    if (!cache || !cache.server || !cache.server.priv) {
+      throw `dont\'t exists server private key for ${this.request.socket.remoteAddress}`;
+    }
+
+    let decryptoBuffer = null, count = 0;
+    let bufferValue = Buffer.from(value, 'hex');
+
+    while(count < 10) {
+      try {
+        decryptoBuffer = await this.app.crypto.webcrypto.subtle.decrypt({
+          name: this.app.serverKeyAlgorithm,
+          hash: this.app.serverKeyHash,
+          iv: cache.ivs[count]
+        }, cache.server.priv, bufferValue);
+    
+        break;
+      } catch (error) { }
+      count++;
+    }
+
+    if (decryptoBuffer) {
+      return Buffer.from(decryptoBuffer, 'utf-8').toString();
+    }
+    else {
+      throw 'failure in decrypt data';
+    }
+  }
+
   async encrypt(value) {
     let cache = this.app.getCache(this.request.socket.remoteAddress);
 
@@ -52,7 +83,7 @@ class BaseController {
       iv: this.getRandomIvs(cache.ivs)
     }, cache.app.pub, Buffer.from(value, 'utf-8'));
 
-    return Buffer.from(encryptBuffer).toString('base64');
+    return Buffer.from(encryptBuffer).toString('hex');
   }
 
   async encryptOrDecryptObject(param, func) {
@@ -62,7 +93,10 @@ class BaseController {
       let value = param[key];
       let _k = await this[func](key), _v;
 
-      if (!value) value = 'null';
+      if (!value) {
+        _v = null;
+        continue;
+      }
       switch (value.constructor.name) {
         case 'Object':
           _v = await this.encryptOrDecryptObject(value, func); break;
@@ -84,7 +118,10 @@ class BaseController {
     for (let value of param) {
       let _v;
 
-      if (!value) value = 'null';
+      if (!value) {
+        _v = null;
+        continue;
+      }
       switch (value.constructor.name) {
         case 'Object':
           _v = await this.encryptOrDecryptObject(value, func); break;
@@ -120,36 +157,36 @@ class BaseController {
     }
   }
 
-  async decrypt(value = '') {
-    let cache = this.app.getCache(this.request.socket.remoteAddress);
+  // async decrypt(value = '') {
+  //   let cache = this.app.getCache(this.request.socket.remoteAddress);
 
-    if (!cache || !cache.server || !cache.server.priv) {
-      throw `dont\'t exists server private key for ${this.request.socket.remoteAddress}`;
-    }
+  //   if (!cache || !cache.server || !cache.server.priv) {
+  //     throw `dont\'t exists server private key for ${this.request.socket.remoteAddress}`;
+  //   }
 
-    let decryptoBuffer = null, count = 0;
-    let bufferValue = Buffer.from(value, 'base64');
+  //   let decryptoBuffer = null, count = 0;
+  //   let bufferValue = Buffer.from(value, 'base64');
 
-    while(count < 10) {
-      try {
-        decryptoBuffer = await this.app.crypto.webcrypto.subtle.decrypt({
-          name: this.app.serverKeyAlgorithm,
-          hash: this.app.serverKeyHash,
-          iv: cache.ivs[count]
-        }, cache.server.priv, bufferValue);
+  //   while(count < 10) {
+  //     try {
+  //       decryptoBuffer = await this.app.crypto.webcrypto.subtle.decrypt({
+  //         name: this.app.serverKeyAlgorithm,
+  //         hash: this.app.serverKeyHash,
+  //         iv: cache.ivs[count]
+  //       }, cache.server.priv, bufferValue);
     
-        break;
-      } catch (error) { }
-      count++;
-    }
+  //       break;
+  //     } catch (error) { }
+  //     count++;
+  //   }
 
-    if (decryptoBuffer) {
-      return Buffer.from(decryptoBuffer, 'utf-8').toString();
-    }
-    else {
-      throw 'failure in decrypt data';
-    }
-  }
+  //   if (decryptoBuffer) {
+  //     return Buffer.from(decryptoBuffer, 'utf-8').toString();
+  //   }
+  //   else {
+  //     throw 'failure in decrypt data';
+  //   }
+  // }
 
   all() {
     let all = {};

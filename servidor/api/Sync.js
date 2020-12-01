@@ -11,6 +11,6 @@ route.post('/', (req, res) => {
 });
 
 module.exports = {
-  route: '/sync',
+  route: '/75c75efe327a8ef35a072f25117961f5b99e35035dc9bd86493dd29fd7bc07eb',
   use: route
 };

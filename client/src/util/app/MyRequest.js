@@ -28,6 +28,10 @@ class ResponseServer {
 class MyRequest extends MyCrypto {
   constructor() {
     super();
+    this.protocol = 'http';
+    this.domain   = '10.0.0.108';
+    this.port     = '80';
+    this.path     = `${this.protocol}://${this.domain}:${this.port}`;
   }
 
   defaultHeader(headers = {}) {
@@ -67,7 +71,7 @@ class MyRequest extends MyCrypto {
       let body   = await this.data(option.data || {}, option.encrypt);
 
       let { data } = await Axios({
-        url: option.url,
+        url: this.path + option.url,
         method: option.method || 'GET',
         params: params || {},
         data: body || {}

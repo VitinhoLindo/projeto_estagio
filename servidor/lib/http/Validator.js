@@ -126,15 +126,15 @@ const isEmail = (value) => {
 }
 
 class Validator {
-  failedField = ''
-  failed = false;
-  rule = '';
-  message = '';
+  failed      = false;
+  rule        = [];
+  message     = [];
+  failedField = []
 
   constructor(opt = new ValidatorOption()) {
-    this.failed = opt.failed;
-    this.rule = opt.rule;
-    this.message = opt.message;
+    this.failed      = opt.failed;
+    this.rule        = opt.rule;
+    this.message     = opt.message;
     this.failedField = opt.failedField;
   }
 
@@ -145,37 +145,42 @@ class Validator {
   modelResponse() {
     let model = {
       code: 400,
-      message: this.message || 'failed in request',
+      message: 'Bad Request',
       result: {
         error: {
         }
       }
     }
 
-    model.result.error[this.failedField] = this.message;
+    for (let field of this.failedField) {
+      if (!this.message[field]) continue;
+
+      model.result.error[field] = this.message[field];
+    }
+
     return model;
   }
 
   static validate(data, rules = undefined | []) {
-    for (let x = 0, rule; rule = rules[x]; x++) {
-      if (rule == 'required') {
-        if (!dataExists(data)) return { failed: true, rule: rule };
-      } else if (rule == 'string') {
-        if (!isString(data)) return { failed: true, rule: rule, ruleMessage: `not string` };
-      } else if (rule == 'interger') {
-        if (!isNumber(data)) return { failed: true, rule: rule, ruleMessage: `not interger` }
-      } else if (rule == 'email') {
-        if (!isEmail(data)) return { failed: true, rule: rule, ruleMessage: `not email format` };
-      } else if (rule == 'array') {
-        if (!isArray(data)) return { failed: true, rule: rule };
+    for (let rule of rules) {
+      if (rule == 'required')             {
+        if (!dataExists(data))              return { failed: true, rule: rule };
+      } else if (rule == 'string')        {
+        if (!isString(data))                return { failed: true, rule: rule, ruleMessage: `not string` };
+      } else if (rule == 'interger')      {
+        if (!isNumber(data))                return { failed: true, rule: rule, ruleMessage: `not interger` }
+      } else if (rule == 'email')         {
+        if (!isEmail(data))                 return { failed: true, rule: rule, ruleMessage: `not email format` };
+      } else if (rule == 'array')         {
+        if (!isArray(data))                 return { failed: true, rule: rule };
       } else if (/^min\:\d+$/.test(rule)) {
-        if (!lenValue(rule, data, 'min')) return { failed: true, rule: rule };
+        if (!lenValue(rule, data, 'min'))   return { failed: true, rule: rule };
       } else if (/^max\:\d+$/.test(rule)) {
-        if (!lenValue(rule, data, 'max')) return { failed: true, rule: rule };
-      } else if (rule == 'url-encode') {
-        if (!isUrlEncode(data)) return { failed: true, rule: rule };
-      } else if (rule == 'datetime') {
-        if (!isDate(data)) return { failed: true, rule: rule };
+        if (!lenValue(rule, data, 'max'))   return { failed: true, rule: rule };
+      } else if (rule == 'url-encode')    {
+        if (!isUrlEncode(data))             return { failed: true, rule: rule };
+      } else if (rule == 'datetime')      {
+        if (!isDate(data))                  return { failed: true, rule: rule };
       }
     }
 
@@ -192,8 +197,9 @@ class Validator {
   static make(data = {}, opt = {}, message = {}) {
     let controller = {
       failed: false,
-      rule: undefined,
-      message: undefined
+      rule: [],
+      message: {},
+      failedField: []
     };
 
     if (data == undefined) controller.failed = true;
@@ -204,19 +210,19 @@ class Validator {
     if (controller.failed) return new Validator(controller);
     for (let field in opt) {
       let result = this.validate(data[field], opt[field].split(/\|/g));
+      
+      if (!result.failed) continue;
+      
       controller.failed = result.failed;
+      controller.rule.push(result.rule);
+      controller.failedField.push(field);
 
-      if (controller.failed) {
-        controller.rule = result.rule;
-        controller.failedField = field;
-
-        if (message[field]) {
-          controller.message = message[field][result.rule || ''] || this.errorMessage(field, result.rule, result.ruleMessage);
-        } else {
-          controller.message = this.errorMessage(field, result.rule, result.ruleMessage);
-        }
-        break;
+      if (message[field] && message[field][result.rule]) {
+        controller.message[field] = message[field][result.rule];
+        continue;
       }
+
+      controller.message[field] = this.errorMessage(field, result.rule, result.ruleMessage);
     }
 
     return new Validator(controller);

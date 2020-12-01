@@ -103,45 +103,6 @@ class CollaboratorController extends BaseController {
     }
 
     return this.defaultResponseJSON({ result: [] });
-    // let all = this.all();
-
-    // try {
-    //   if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
-
-    //   if (!Object.keys(all).length) {
-    //     let marks = await Mark.instance().get();
-    //     await marks.decrypt(this.app, 'decrypt');
-        
-    //     try {
-    //       return this.defaultResponseJSON({ result: await this.encryptOrDecrypt(marks.toArray(), 'encrypt') });
-    //     } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
-    //   }
- 
-    //   try {
-    //     all = await this.encryptOrDecrypt(all, 'decrypt');
-    //   } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
-
-    //   let validator = this.Validator.make(all, { 
-    //     id: 'required|interger|min:1' 
-    //   }, { 
-    //     id: {
-    //       required: 'id is required',
-    //       string: 'id type is string encrypted'
-    //     } 
-    //   });
-
-    //   if (validator.fails()) throw validator.modelResponse();
-
-    //   let mark = await Mark.instance().where({ column: 'id', value: parseInt(all.id) }).get();
-    //   await mark.decrypt(this.app, 'decrypt');
-
-    //   try {
-    //     mark = await this.encryptOrDecrypt(mark.first().toJSON(), 'encrypt');
-    //     return this.defaultResponseJSON({ result: { ...mark } }); 
-    //   } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
-    // } catch(error) {
-    //   return this.sendError(error);
-    // }
   }
 
   async post() {
@@ -153,7 +114,11 @@ class CollaboratorController extends BaseController {
         all = await this.encryptOrDecrypt(all, 'decrypt');
       } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } } }
 
-      let validator = this.Validator.make(all, Collaborator.getModel(), { 
+      let validator = this.Validator.make(all, {
+        nome: 'required|string',
+        cpf: 'required|string',
+        email: 'required|string'
+      }, { 
         nome: {
           required: 'nome is required',
           string: 'nome type is string'
@@ -168,16 +133,15 @@ class CollaboratorController extends BaseController {
         }
       });
 
-      if (validator.fails() && validator.failedField != 'id') {
+      if (validator.fails()) {
         let model = validator.modelResponse();
         model.result = await this.encryptOrDecrypt(model.result, 'encrypt');
         throw model;
       }
 
-      let data = Collaborator.getModel(all);
-      data = await Collaborator.encryptOrDecrypt(data, this.app, 'encrypt', new Date());
-      let inserted = await Collaborator.instance().insert(data);
-      await Collaborator.encryptOrDecrypt(inserted, this.app, 'decrypt', inserted.created_at);
+      all = await Collaborator.encryptOrDecrypt(all, this.app, 'encrypt', new Date());
+      let inserted = await Collaborator.instance().insert(all);
+      await Collaborator.encryptOrDecrypt(inserted, this.app, 'decrypt', inserted.updated_at || inserted.created_at);
 
       try {
         inserted = await this.encryptOrDecrypt(inserted.toJSON(), 'encrypt');

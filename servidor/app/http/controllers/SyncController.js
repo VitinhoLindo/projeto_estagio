@@ -26,9 +26,9 @@ class SyncController extends BaseController {
   async post() {
     let all = this.all();
     let validator = this.Validator.make(all, { 
-      pub: 'required|string' 
+      p: 'required|string' 
     }, { 
-      pub: { 
+      p: { 
         required: 'pub field is required', 
         string: 'pub type is string' 
       } 
@@ -42,7 +42,7 @@ class SyncController extends BaseController {
     let pub = null, publicKey, privateKey; 
 
     if (cache && cache.cryptoGenerate) {
-      if (!all.build) {
+      if (!all.b) {
         return this.serverImportKeysAndSave(cache.server.priv, cache.server.pub, cache.app.pub, cache.cryptoGenerate, cache.ivs);
       }
 
@@ -51,7 +51,7 @@ class SyncController extends BaseController {
       privateKey = server.privateKey;
     }
     
-    pub = this.app.pemToBinary(all.pub)
+    pub = this.app.hexToBinary(all.p)
     pub = await this.app.importKey(pub);
 
     if (!publicKey && !privateKey) {
@@ -82,13 +82,14 @@ class SyncController extends BaseController {
     });
 
     publicKey = await this.app.exportKey(publicKey);
-    publicKey = this.app.binaryToPem(publicKey);
+    publicKey = this.app.binaryToHex(publicKey);
 
     return this.defaultResponseJSON({
       result: {
-        pub: publicKey,
-        ivs,
-        date
+        p: publicKey,
+        i: ivs.map((a) => {
+          return this.app.binaryToHex(a);
+        })
       }
     })
   }
