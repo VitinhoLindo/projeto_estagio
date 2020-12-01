@@ -1,9 +1,7 @@
 const mysql = require('mysql2')
 const process = require('process');
 const fs = require('fs');
-const Validator = require('../http/Validator');
 const Collection = require('./Collection');
-const { Console } = require('console');
 
 var selectFields = [];
 var whereFields = [];
