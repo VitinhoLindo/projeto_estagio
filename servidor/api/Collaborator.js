@@ -23,6 +23,6 @@ route.delete('/', (req, res) => {
 });
 
 module.exports = {
-  route: '/co',
+  route: '/col',
   use: route
 };
