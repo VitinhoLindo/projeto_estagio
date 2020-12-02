@@ -55,48 +55,31 @@ export default {
     async login() {
       this.blocked = true;
       this.$app.emit('loading', { on: true });
-      let values = {};
 
-      for(let key in this.inputs) {
-        values[key] = await this.$app.hash(this.inputs[key].value);
-      }
+      try {
+        let values = {};
 
-      let req = {
-        success: null,
-        error: null,
-        trying: 0,
-        maxTrying: 5
-      }
-
-      while(req.trying < req.maxTrying) {
-        try {
-          let { code, message, result, status } = await this.$app.request({
-            url: '/auth',
-            method: 'post',
-            data: values,
-            encrypt: true
-          });
-
-          if (status == 'error') throw (result.error || message);
-
-          req.success = result;
-          break;
-        } catch (error) {
-          req.error = error;
-          req.trying++;          
+        for(let key in this.inputs) {
+          values[key] = await this.$app.hash(this.inputs[key].value);
         }
+
+        let { code, message, result, status } = await this.$app.request({
+          url: '/auth',
+          method: 'post',
+          data: values,
+          encrypt: true
+        });
+
+        if (status == 'error') throw (result.error || message);
+
+        this.$app.authentication(result);
+      } catch (error) {
+        if (typeof error != 'string') this.showError(error);
+        else this.$app.emit('error', { message: error, show: true }); 
       }
 
       this.$app.emit('loading', { on: false });
       this.blocked = false;
-
-      if (req.success) {
-        this.$app.authentication(req.success);
-        return this.$router.push({ path: '/' });
-      } else {
-        if (typeof req.error != 'string') return this.showError(req.error);
-        return this.$app.emit('error', { message: req.error, show: true }); 
-      }
     },
     showError(error = {}) {
       for (let key in error) {

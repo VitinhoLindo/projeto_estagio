@@ -30,7 +30,7 @@ class AuthController extends BaseController {
       }
 
       let login = await Login.instance().where({ column: 'email', value: all.email }).first();
-      if (!login) throw { code: 400, message: 'bad request' };
+      if (!login) throw { code: 400, message: 'bad request', result: { error: { email: 'user not exists' } } };
 
       if (login.email == all.email && login.senha == all.senha) {
         let auth;
@@ -44,7 +44,7 @@ class AuthController extends BaseController {
         } catch (error) { throw { code: 500, message: 'internal server error' }; }
         return this.defaultResponseJSON({ result: await this.encryptOrDecrypt({ auth }, 'encrypt') });
       } else {
-        throw { code: 400, message: 'bad request' };
+        throw { code: 400, message: 'bad request', result: { error: { email: 'user not exists' } } }
       }
     } catch (error) {
       return this.sendError(error);
