@@ -68,34 +68,22 @@ module.exports = function (app = App(), server = express()) {
 
   for(let api of Api) {
     if (!api.route || !api.use) continue;
-    
+
     server.use(api.route, api.use);
   }
 
   server.use(function(req, res, next) {
+    res.write(`
+      <div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
+        <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+          <img src="/image/77ec380c9b1860955a475d0002b0d0af.gif" width="250px" height="250px">
+          <h1>404 don\'t found</h1>
+        <div>
+      </div>
+    `);
+
     res.status(404);
-
-    // respond with html page
-    if (req.accepts('html')) {
-      res.write(`
-        <div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
-          <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
-            <img src="/image/77ec380c9b1860955a475d0002b0d0af.gif" width="250px" height="250px">
-            <h1>404 don\'t found</h1>
-          <div>
-        </div>
-      `);
-      return;
-    }
-
-    // respond with json
-    if (req.accepts('json')) {
-      res.send({ error: 'Not found' });
-      return;
-    }
-
-    // default to plain-text. send()
-    res.type('txt').send('Not found');
+    res.end();
   });
 
   return server;
