@@ -79,7 +79,7 @@ export default {
      *
      * func: this.getdata() [Promise] void
      *   <summary>
-     *      call to server in route ['/rent', '/collaborators', '/itens']
+     *      call to server in route ['/re', '/col', '/it']
      *      after response set data in content page
      *   </summary>
      */
@@ -138,44 +138,41 @@ export default {
      * </summary>
      * return void;
      */
-    async getData(count = 0, error = '') {
-      if (count == 5) {
-        this.$app.emit('loading', { on: false });
-        return this.$app.emit('error', { message: error, show: true });
-      }
-
+    async getData() {
       this.$app.emit('loading', { on: true });
+
       try {
         let [rents, collaborators, itens] = await Promise.all([
           await this.$app.request({
-            url: '/rent',
+            url: '/re',
             method: 'GET',
             encrypt: true
           }),
           await this.$app.request({
-            url: '/collaborators',
+            url: '/col',
             method: 'GET',
             encrypt: true
           }),
           await this.$app.request({
-            url: '/itens',
+            url: '/it',
             method: 'GET',
             encrypt: true
           })
         ]);
 
-        if (rents.status == 'error') throw rents.message;
+        if (rents.status         == 'error') throw rents.message;
         if (collaborators.status == 'error') throw collaborators.message;
-        if (itens.status == 'error') throw itens.message;
+        if (itens.status         == 'error') throw itens.message;
 
         this.collaborators = collaborators.result;
         this.itens         = itens.result;
         this.data          = rents.result;
       } catch (err) {
-        return this.getData(count++, err);
+        this.$app.emit('loading', { on: false });
+        return this.$app.emit('error', { message: err, show: true });
       }
 
-      this.handlePage();
+      return this.handlePage();
     },
     /**
      * <summary>

@@ -49,7 +49,7 @@ class MtDate {
     if (!parseInt(value)) return this;
 
     this.date.setHours(this.hour + parseInt(value));
-    return this;
+    return new MtDate(this.date);
   }
 
   addMinutes(value = 0) {
@@ -57,7 +57,7 @@ class MtDate {
     if (!parseInt(value)) return this;
 
     this.date.setMinutes(this.minute + parseInt(value));
-    return this;
+    return new MtDate(this.date);
   }
 
   get() {

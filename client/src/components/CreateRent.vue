@@ -99,36 +99,32 @@ export default {
     }
   },
   methods: {
-    async mounted(count = 0, error = '') {
-      if (count == 5) {
-        this.$app.emit('error', { message: error, show: true });
-        return this.cancel();
-      }
-
+    async mounted() {
       this.locked = true;
       this.$app.emit('loading', { on: true });
 
       try {
         let [ itens, collaborators ] = await Promise.all([
           this.$app.request({
-            url: '/itens',
+            url: '/it',
             method: 'get',
             encrypt: true
           }),
           this.$app.request({
-            url: '/collaborators',
+            url: '/col',
             method: 'get',
             encrypt: true
           })
         ]);
 
-        if (itens.status == 'error') throw itens.message;
+        if (itens.status         == 'error') throw itens.message;
         if (collaborators.status == 'error') throw collaborators.message;
 
-        this.input.iten.values = itens.result;
+        this.input.iten.values        = itens.result;
         this.input.colaborador.values = collaborators.result;
       } catch(error) {
-        return this.mounted(count++, error);
+        this.$app.emit('error', { message: error, show: true });
+        this.cancel();
       }
 
       this.$app.emit('loading', { on: false });
@@ -151,33 +147,29 @@ export default {
         }
 
         let { status, code, result, message } = await this.$app.request({
-          url: '/rent',
+          url: '/re',
           method: 'POST',
           data: data,
           encrypt: true
         });
 
-        if (status == 'error') {
-          if (result.error) {
-            for(let key in result.error) {
-              this.input[key].error = result.error[key];
-              console.log(key);
-            }
-            this.locked = false;
-            this.$app.emit('loading', { on: false });
-            return;
-          }
-          else throw message;
-        }
+        if (status == 'error') throw (result.error || message);
 
-        this.locked = false;
         return this.$emit('created-item', event, result);
       } catch(error) {
-        this.$app.emit('error', { message: error, show: true });
+        if (typeof error == 'object')
+          this.setError(error);
+        else
+          this.$app.emit('error', { message: error, show: true });
       }
 
       this.$app.emit('loading', { on: false });
       this.locked = false;
+    },
+    setError(error = {}) {
+      for(let key in error) {
+        this.input[key].error = error[key];
+      }
     },
     cancel(event) {
       this.locked = true;

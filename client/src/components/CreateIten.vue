@@ -78,7 +78,7 @@ export default {
 
       try {
         let { status, code, result, message } = await this.$app.request({
-          url: '/mark',
+          url: '/ma',
           method: 'get',
           encrypt: true
         });
@@ -87,6 +87,7 @@ export default {
 
         this.input.marca.values = result;
       } catch(error) {
+        this.cancel();
         this.$app.emit('error', { message: error, show: true });
       }
 
@@ -105,22 +106,30 @@ export default {
         }
 
         let { status, code, result, message } = await this.$app.request({
-          url: '/itens',
+          url: '/it',
           method: 'POST',
           data: data,
           encrypt: true
         });
 
-        if (status == 'error') throw message;
+        if (status == 'error') throw (result.error || message);
 
-        this.locked = false;
         return this.$emit('created-item', event, result);
       } catch(err) {
-        this.$app.emit('error', { message: error, show: true });
+        if (typeof err == 'object') 
+          this.setError(err);
+        else
+          this.$app.emit('error', { message: error, show: true });
       }
 
       this.$app.emit('loading', { on: false });
       this.locked = false;
+    },
+    setError(error = {}) {
+      for(let key in error) {
+        if (this.input[key]) 
+          this.input[key] = error[key];
+      }
     },
     cancel(event) {
       this.locked = true;

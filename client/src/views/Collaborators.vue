@@ -61,7 +61,7 @@ export default {
      *
      * func: this.getdata() [Promise] void
      *   <summary>
-     *      call to server in route ['/collaborators']
+     *      call to server in route ['/col']
      *      after response set data in content page
      *   </summary>
      */
@@ -92,28 +92,21 @@ export default {
      * </summary>
      * return void;
      */
-    async getData(count = 0, error = '') {
-      if (count == 5) {
-        this.$app.emit('loading', { on: false });
-        return this.$app.emit('error', { on: error, show: true });
-      }
-
+    async getData() {
       this.$app.emit('loading', { on: true });
-      try {
+      let { code, message, result, status } = await this.$app.request({
+        url: '/col',
+        method: 'GET',
+        encrypt: true
+      });
 
-        let { code, message, result, status } = await this.$app.request({
-          url: '/collaborators',
-          method: 'GET',
-          encrypt: true
-        });
-
-        if (status == 'error') throw message;
-
-        this.data = result;
-        return this.handlePage();
-      } catch (err) {
-        return this.getData(count++, err);
+      if (status == 'error') {
+        this.$app.emit('loading', { on: false });
+        return this.$app.emit('error', { message: message, show: true });
       }
+
+      this.data = result;
+      this.handlePage();
     },
     /**
      * <summary>

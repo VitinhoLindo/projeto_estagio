@@ -61,7 +61,7 @@ export default {
      *
      * func: this.getdata() [Promise] void
      *   <summary>
-     *      call to server in route ['/itens']
+     *      call to server in route ['/it']
      *      after response set data in content page
      *   </summary>
      */
@@ -92,17 +92,12 @@ export default {
      * </summary>
      * return void;
      */
-    async getData(count = 0, error = '') {
-      if (count == 5) {
-        this.$app.emit('loading', { on: false });
-        return this.$app.emit('error', { message: error, show: true });
-      }
-
+    async getData() {
       this.$app.emit('loading', { on: true });
 
       try {
         let { code, message, result, status } = await this.$app.request({
-          url: '/itens',
+          url: '/it',
           method: 'GET',
           encrypt: true
         });
@@ -110,10 +105,12 @@ export default {
         if (status == 'error') throw message;
 
         this.data = result;
-        this.handlePage();
       } catch(err) {
-        return this.getData(count++, err);
+        this.$app.emit('loading', { on: false });
+        return this.$app.emit('error', { message: err, show: true });
       }
+
+      return this.handlePage();
     },
     /**
      * <summary>

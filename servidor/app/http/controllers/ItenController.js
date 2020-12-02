@@ -16,7 +16,10 @@ class ItenController extends BaseController {
   async get() {
     try {
       if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
-      
+      if (!(await this.authentication())) {
+        return this.defaultResponseJSON({ code: 403, message: 'authentication expired', result: { authentication: true } });
+      }
+
       let itens = await Iten.instance().get();
       await itens.decrypt(this.app, 'decrypt');
       try {
@@ -30,10 +33,12 @@ class ItenController extends BaseController {
 
   async post() {
     try {
-      let all = this.all();
-
       if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
+      if (!(await this.authentication())) {
+        return this.defaultResponseJSON({ code: 403, message: 'authentication expired', result: { authentication: true } });
+      }
 
+      let all = this.all();
       try {
         all = await this.encryptOrDecrypt(all, 'decrypt');
       } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
@@ -62,10 +67,12 @@ class ItenController extends BaseController {
 
   async put() {
     try {
-      let all = this.all();
-
       if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
+      if (!(await this.authentication())) {
+        return this.defaultResponseJSON({ code: 403, message: 'authentication expired', result: { authentication: true } });
+      }
 
+      let all = this.all();
       try {
         all = await this.encryptOrDecrypt(all, 'decrypt');        
       } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
@@ -106,10 +113,12 @@ class ItenController extends BaseController {
 
   async delete() {
     try {
-      let all = this.all();
-  
       if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
+      if (!(await this.authentication())) {
+        return this.defaultResponseJSON({ code: 403, message: 'authentication expired', result: { authentication: true } });
+      }
 
+      let all = this.all();
       try {
         all = await this.encryptOrDecrypt(all, 'decrypt');
       } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
@@ -126,7 +135,16 @@ class ItenController extends BaseController {
 
       let value = await Iten.instance().where({ column: 'id', value: all.id }).first();
       if (!value) throw { code: 404, message: 'don\'t found' };
-      await value.delete();
+
+      try {
+        await value.delete();
+      } catch (error) {
+        if (error.errno == 1451) {
+          throw { code: 400, message: 'sorry not possible' };
+        } else {
+          throw { code: 400, message: 'bad request' };
+        }
+      }
 
       return this.defaultResponseJSON();
     } catch (error) {

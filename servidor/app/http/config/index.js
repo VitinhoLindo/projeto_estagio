@@ -14,6 +14,7 @@ class Config {
     }
 
     try {
+      throw '';
       const fs = require('fs');
 
       let key  = fs.readFileSync(`${__dirname}/ssl/server.key`);

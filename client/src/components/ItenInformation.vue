@@ -106,7 +106,7 @@ export default {
 
       try {
         let { status, code, result, message } = await this.$app.request({
-          url: '/mark',
+          url: '/ma',
           method: 'get',
           encrypt: true
         });
@@ -116,6 +116,7 @@ export default {
         this.marks = result;
       } catch(error) {
         this.$app.emit('error', { message: error, show: true });
+        this.closeModal();
       }
 
       this.$app.emit('loading', { on: false });
@@ -140,58 +141,43 @@ export default {
     async updatedData(event) {
       this.$app.emit('loading', { on: true });
 
-      let req = {
-        success: null,
-        error: null,
-        trying: 0,
-        maxTrying: 5
-      }
+      try {
+        let updated = {};
 
-      let updated = {};
-
-      for(let key in this.processed) {
-        if (key == 'id') {
-          updated[key] = this.processed[key].value;
+        for(let key in this.processed) {
+          if (key == 'id') {
+            updated[key] = this.processed[key].value;
+          }
+          if (this.processed[key].value != this.data[key]) {
+            updated[key] = this.processed[key].value;
+          }
         }
-        if (this.processed[key].value != this.data[key]) {
-          updated[key] = this.processed[key].value;
-        }
-      }
 
-      while(req.trying < req.maxTrying) {
-        try {
-          let { code, message, result, status } = await this.$app.request({
-            url: '/itens',
-            method: 'put',
-            data: updated,
-            encrypt: true
-          });
+        let { code, message, result, status } = await this.$app.request({
+          url: '/it',
+          method: 'put',
+          data: updated,
+          encrypt: true
+        });
 
-          if (status == 'error') throw (result.error || message);
+        if (status == 'error') throw (result.error || message);
 
-          req.success = result;
-          break;
-        } catch(error) {
-          req.error = error;
-          req.trying++;
-          continue;
-        }
+        return this.$emit('updated', event, result);
+      } catch(error) {
+        if (typeof error == 'string') 
+          this.$app.emit('error', { message: error, show: true });
+        else 
+          this.showError(error);
       }
 
       this.$app.emit('loading', { on: false });
-      if (req.success) {
-        return this.$emit('updated', event, req.success);
-      } else {
-        if (typeof req.error == 'string') return this.$app.emit('error', { message: req.error, show: true });
-        else return this.showError(req.error);
-      }
     },
     async deleteData() {
       this.$app.emit('loading', { on: true });
 
       try {
         let { code, message, result, status } = await this.$app.request({
-          url: '/itens',
+          url: '/it',
           method: 'delete',
           params: { id: this.data.id },
           encrypt: true

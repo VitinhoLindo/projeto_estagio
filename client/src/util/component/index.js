@@ -12,6 +12,7 @@ import CollaborationInformation from '../../components/CollaborationInformation.
 import ItenInformation from '../../components/ItenInformation.vue'
 import CreateRent from '../../components/CreateRent.vue'
 import RentInformation from '../../components/RentInformation.vue'
+import Login from '../../views/Login.vue'
 
 export default function (Vue) {
   // Vue.component('qr-code', VueQrcode);
@@ -29,4 +30,5 @@ export default function (Vue) {
   Vue.component('collaboration-information', CollaborationInformation);
   Vue.component('iten-information', ItenInformation);
   Vue.component('rent-information', RentInformation);
+  Vue.component('app-login', Login);
 }

@@ -38,7 +38,7 @@ class MyEvent extends Variables {
 
   async on(listen, func, callback) {
     if (typeof listen !== 'string') return error('function.on: variable listen is not string', callback);
-    if (typeof func !== 'function') return error('function.on: variable listen is not function', callback);
+    if (typeof func !== 'function') return error('function.on: variable function is not function', callback);
 
     if (!listiners[listen]) listiners[listen] = { };
 

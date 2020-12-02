@@ -77,36 +77,32 @@ export default {
       value = this.values[type].filter((a) => a.id == value);
       return value[0].nome;
     },
-    async onMounted(count = 0, error = '') {
-      if (count == 5) {
-        this.$app.emit('loading', { on: false });
-        return this.$app.emit('error', { message: error, show: true });
-      }
-
+    async onMounted() {
       this.locked = true;
       this.$app.emit('loading', { on: true });
 
       try {
         let [itens, collaborators] = await Promise.all([
           await this.$app.request({
-            url: '/itens',
+            url: '/it',
             method: 'get',
             encrypt: true
           }),
           await this.$app.request({
-            url: '/collaborators',
+            url: '/col',
             method: 'get',
             encrypt: true
           })
         ]);
 
-        if (itens.status == 'error') throw itens.message;
+        if (itens.status         == 'error') throw itens.message;
         if (collaborators.status == 'error') throw collaborators.message;
 
         this.values.collaborators = collaborators.result;
         this.values.itens = itens.result;
       } catch(error) {
-        return this.onMounted(count++, error);
+        this.$app.emit('error', { message: error, show: true });
+        this.closeModal();
       }
 
       this.locked = false;
@@ -167,26 +163,36 @@ export default {
         updated.expiration_at = new Date(`${this.values.date.value} ${this.values.time.value}`);
 
         let { code, message, result, status } = await this.$app.request({
-          url: '/rent',
+          url: '/re',
           method: 'put',
           data: updated,
           encrypt: true
         });
 
-        if (status == 'error') throw message;
+        if (status == 'error') throw (result.error || message);
         return this.$emit('updated', event, result);
       } catch(error) {
-        this.$app.emit('error', { message: error, show: true });
+        if (typeof error == 'object')
+          this.setError(error)
+        else
+          this.$app.emit('error', { message: error, show: true });
       }
 
       this.$app.emit('loading', { on: false });
+    },
+    setError(error = {}) {
+      for(let key in error) {
+        if (key == 'expiration_at') {
+          this.values.date.error = error[key];
+        }
+      }
     },
     async deleteData() {
       this.$app.emit('loading', { on: true });
 
       try {
         let { code, message, result, status } = await this.$app.request({
-          url: '/itens',
+          url: '/it',
           method: 'delete',
           params: { id: this.data.id },
           encrypt: true

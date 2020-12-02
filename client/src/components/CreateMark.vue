@@ -52,60 +52,35 @@ export default {
     }
   },
   methods: {
-    async create(event, count = 0, error = '') {
+    async create(event) {
       this.locked = true;
       this.$app.emit('loading', { on: true });
 
-      let req = {
-        success: null,
-        error: null,
-        trying: 0,
-        maxTrying: 5
-      };
-
-      let data = {};
-      for(let key in this.markInput) {
-        data[key] = this.markInput[key].value;
-      }
-
-      while(req.trying < req.maxTrying) {
-        try {
-          let { status, code, result, message } = await this.$app.request({
-            url: '/mark',
-            method: 'POST',
-            data: data,
-            encrypt: true
-          });
-
-          if (status != 'error') {
-            req.success = result;
-            break;
-          } else {
-            if (!result.error) {
-              throw message;
-            } else {
-              this.setErrorFields(result.error);
-              break;
-            }
-          }
-        } catch(err) {
-          req.trying++;
-          req.error = err;
+      try {
+        let data = {};
+        for(let key in this.markInput) {
+          data[key] = this.markInput[key].value;
         }
+
+        let { status, code, result, message } = await this.$app.request({
+          url: '/ma',
+          method: 'POST',
+          data: data,
+          encrypt: true
+        });
+
+        if (status == 'error') throw (result.error || message);
+
+        return this.$emit('created-mark', event, result);
+      } catch(err) {
+        if (typeof err == 'object')
+          this.setErrorFields(err);
+        else 
+          this.$app.emit('error', { message: err, show: true });
       }
 
       this.locked = false;
       this.$app.emit('loading', { on: false });
-
-      if (req.success) {
-        return this.$emit('created-mark', event, req.success);
-      } 
-      if (req.error) {
-        return this.$emit('error', { message: req.error, show: true });
-      }
-    },
-    showError(error = '') {
-      return this.$app.emit('error', { message: error, show: true });
     },
     setErrorFields(error = {}) {
       for(let key in error) {

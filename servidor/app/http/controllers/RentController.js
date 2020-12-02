@@ -16,6 +16,9 @@ class RentController extends BaseController {
   async get() {
     try {
       if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
+      if (!(await this.authentication())) {
+        return this.defaultResponseJSON({ code: 403, message: 'authentication expired', result: { authentication: true } });
+      }
 
       let rents = await Rent.instance().get();  
       await rents.decrypt(this.app,'decrypt');
@@ -35,10 +38,12 @@ class RentController extends BaseController {
 
   async post() {
     try {
-      let all = this.all();
-
       if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
+      if (!(await this.authentication())) {
+        return this.defaultResponseJSON({ code: 403, message: 'authentication expired', result: { authentication: true } });
+      }
 
+      let all = this.all();
       try {
         all = await this.encryptOrDecrypt(all, 'decrypt');
       } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
@@ -69,9 +74,12 @@ class RentController extends BaseController {
 
   async put() {
     try {
-      let all = this.all();
       if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
+      if (!(await this.authentication())) {
+        return this.defaultResponseJSON({ code: 403, message: 'authentication expired', result: { authentication: true } });
+      }
 
+      let all = this.all();
       try {
         all = await this.encryptOrDecrypt(all, 'decrypt');
       } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
@@ -104,36 +112,6 @@ class RentController extends BaseController {
     } catch (error) {
       return this.sendError(error);
     }
-  }
-
-  async delete() {
-    // try {
-    //   let all = this.all();
-  
-    //   if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
-
-    //   try {
-    //     all = await this.encryptOrDecrypt(all, 'decrypt');
-    //   } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
-
-    //   let validator = this.Validator.make(all, {
-    //     id: 'required|interger'
-    //   });
-
-    //   if (validator.fails()) {
-    //     let model = validator.modelResponse();
-    //     model.result = await this.encryptOrDecrypt(model.result, 'encrypt');
-    //     return this.defaultResponseJSON(model);
-    //   }
-
-    //   let value = await Iten.instance().where({ column: 'id', value: all.id }).first();
-    //   if (!value) throw { code: 404, message: 'don\'t found' };
-    //   await value.delete();
-
-    //   return this.defaultResponseJSON();
-    // } catch (error) {
-    //   return this.sendError(error);
-    // }
   }
 }
 

@@ -1,5 +1,7 @@
 class Variables {
   constructor() {
+    this.auth = '';
+
     this.secret = {
       app: {
         privateKey: '',

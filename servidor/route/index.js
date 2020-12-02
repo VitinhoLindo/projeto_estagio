@@ -2,6 +2,7 @@ const App = require('../app');
 const Middlaware = require('../app/http/middleware');
 const Api = require('../api');
 const express = require('express');
+const Login = require('../app/Login');
 
 module.exports = function (app = App(), server = express()) {
 
@@ -9,6 +10,7 @@ module.exports = function (app = App(), server = express()) {
   server.use('/js', express.static(app.__dirname + '/public/js'));
   server.use('/css', express.static(app.__dirname + '/public/css'));
   server.use('/ico', express.static(app.__dirname + '/public/ico'));
+  server.use('/image', express.static(app.__dirname + '/public/image'));
 
   const credential = (request = express.request, response = express.response, next) => {
     response.setHeader('Access-Control-Allow-Origin', '*');
@@ -17,6 +19,29 @@ module.exports = function (app = App(), server = express()) {
     response.setHeader('Access-Control-Allow-Credentials', false);
     response.setHeader('Server', 'Nodejs');
 
+    request.getUser = async () => {
+      let auth = request.headers['authorization'];
+
+      if (!auth) return null;
+      else {
+        try {
+          auth = auth.replace('Bearer ', '');
+          auth = await app.decrypt(auth);
+          auth = JSON.parse(auth);
+
+          let mt = app.getMtDate(new Date(auth.date));
+
+          if (new Date() >= mt.addHours(5).get()) {
+            return null;
+          }
+
+          return await Login.instance().where({ column: 'id', value: auth.id }).first();
+        } catch (error) {
+          console.log(error);
+          return null;
+        }
+      }
+    }
     request.getApp = () => {
       return app;
     };
@@ -41,12 +66,37 @@ module.exports = function (app = App(), server = express()) {
   server.use(loggable);
   server.use((r, s, n) => middlaware.validate(r, s, n));
 
-  server.use(Api.Language.route, Api.Language.use);
-  server.use(Api.Iten.route, Api.Iten.use);
-  server.use(Api.Sync.route, Api.Sync.use);
-  server.use(Api.Mark.route, Api.Mark.use);
-  server.use(Api.Collaborator.route, Api.Collaborator.use);
-  server.use(Api.Rent.route, Api.Rent.use);
+  for(let api of Api) {
+    if (!api.route || !api.use) continue;
+    
+    server.use(api.route, api.use);
+  }
 
-  return this;
+  server.use(function(req, res, next) {
+    res.status(404);
+
+    // respond with html page
+    if (req.accepts('html')) {
+      res.write(`
+        <div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
+          <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <img src="/image/77ec380c9b1860955a475d0002b0d0af.gif" width="250px" height="250px">
+            <h1>404 don\'t found</h1>
+          <div>
+        </div>
+      `);
+      return;
+    }
+
+    // respond with json
+    if (req.accepts('json')) {
+      res.send({ error: 'Not found' });
+      return;
+    }
+
+    // default to plain-text. send()
+    res.type('txt').send('Not found');
+  });
+
+  return server;
 }

@@ -12,7 +12,6 @@ class SyncController extends BaseController {
     let cache = this.app.getCache(this.request.socket.remoteAddress);
     let res = { auth: true }
 
-
     if (!cache || !cache.cryptoGenerate) {
       res.auth = false;
     }

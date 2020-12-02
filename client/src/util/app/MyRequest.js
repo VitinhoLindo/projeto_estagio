@@ -14,10 +14,10 @@ class MyRequestOption {
 
 class ResponseServer {
   constructor(data) {
-    this.message = data.message;
-    this.code = data.code;
+    this.message = data.message || 'auto response';
+    this.code = data.code || 200;
     this.result = data.result || {};
-    this.status = data.status;
+    this.status = data.status || 'success';
   }
 
   static stance(data) {
@@ -35,6 +35,9 @@ class MyRequest extends MyCrypto {
       if (!headers[key]) 
         headers[key] = this.defaultHeaders[key];
     }
+
+    if (this.auth)
+      headers['Authorization'] = `Bearer ${this.auth}`;
 
     return headers;
   }
@@ -70,25 +73,33 @@ class MyRequest extends MyCrypto {
         url: option.url,
         method: option.method || 'GET',
         params: params || {},
-        data: body || {}
+        data: body || {},
+        headers: option.headers
       });
 
-      if (data.result.expiredCrypto) {
-        await this.sync({ build: true });
-
-        if (!option.count) {
-          option.count = 1;
+      if (data.result) {
+        if (data.result.expiredCrypto) {
+          await this.sync({ build: true });
+  
+          if (!option.count) {
+            option.count = 1;
+          }
+          else if (option.count == 5) {
+            throw 'error in request'
+          }
+          else {
+            option.count += 1;
+          }
+  
+          await this.sleep(1);
+          return await this.request(option);
+        } else if (data.result.authentication) {
+          this.auth = '';
+          this.emit('authentication', !!this.auth);
+          throw 'authentication failed';
         }
-        else if (option.count == 5) {
-          throw 'error in request'
-        }
-        else {
-          option.count += 1;
-        }
-
-        await this.sleep(1);
-        return await this.request(option);
       }
+
 
       if (option.encrypt) {
         data.result = await this.encrytOrDecrypt(data.result, 'decrypt');
@@ -96,7 +107,8 @@ class MyRequest extends MyCrypto {
 
       return ResponseServer.stance(data);
     } catch (error) {
-      console.error(error);
+      if (typeof error == 'object' && error.auth) return ResponseServer.stance({})
+
       return ResponseServer.stance({
         code: 400,
         message: error,
@@ -104,6 +116,11 @@ class MyRequest extends MyCrypto {
         result: {}
       });
     }
+  }
+
+  authentication(param = { auth: '' }) {
+    this.auth = param.auth;
+    this.emit('authentication', !!this.auth);
   }
 }
 

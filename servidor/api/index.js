@@ -1,9 +1,10 @@
-module.exports = {
-  Root: require('./Root'),
-  Language: require('./Language'),
-  Iten: require('./Iten'),
-  Sync: require('./Sync'),
-  Mark: require('./Mark'),
-  Collaborator: require('./Collaborator'),
-  Rent: require('./Rent')
-}
+module.exports = [
+  require('./Root'),
+  require('./Language'),
+  require('./Iten'),
+  require('./Sync'),
+  require('./Mark'),
+  require('./Collaborator'),
+  require('./Rent'),
+  require('./Auth')
+]

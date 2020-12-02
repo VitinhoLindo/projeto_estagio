@@ -10,11 +10,13 @@ class CollaboratorController extends BaseController {
   }
 
   async put() {
-    let all = this.all();
-
     try {
       if (!this.cacheCrypto()) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
+      if (!(await this.authentication())) {
+        return this.defaultResponseJSON({ code: 403, message: 'authentication expired', result: { authentication: true } });
+      }
 
+      let all = this.all();
       try {
         all = await this.encryptOrDecrypt(all, 'decrypt');
       } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } } }
@@ -52,10 +54,12 @@ class CollaboratorController extends BaseController {
 
   async delete() {
     try {
-      let all = this.all();
-
       if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
+      if (!(await this.authentication())) {
+        return this.defaultResponseJSON({ code: 403, message: 'authentication expired', result: { authentication: true } });
+      }
 
+      let all = this.all();
       try {
         all = await this.encryptOrDecrypt(all, 'decrypt');
       } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
@@ -76,7 +80,15 @@ class CollaboratorController extends BaseController {
       }
 
       let value = await Collaborator.instance().where({ column: 'id', value: all.id }).first();
-      await value.delete();
+      try {
+        await value.delete();
+      } catch (error) {
+        if (error.errno == 1451) {
+          throw { code: 400, message: 'sorry not possible' };
+        } else {
+          throw { code: 400, message: 'bad request' };
+        }
+      }
 
       return this.defaultResponseJSON();
     } catch (error) {
@@ -85,31 +97,31 @@ class CollaboratorController extends BaseController {
   }
   
   async get() {
-    let all = this.all();
-
     try {
       if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
-
-      if (!Object.keys(all).length) {
-        let collaborators = await Collaborator.instance().get();
-        await collaborators.decrypt(this.app, 'decrypt');
-
-        try {
-          return this.defaultResponseJSON({ result: await this.encryptOrDecrypt(collaborators.toArray(), 'encrypt') });
-        } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
+      if (!(await this.authentication())) {
+        return this.defaultResponseJSON({ code: 403, message: 'authentication expired', result: { authentication: true } });
       }
+
+      let collaborators = await Collaborator.instance().get();
+      await collaborators.decrypt(this.app, 'decrypt');
+
+      try {
+        return this.defaultResponseJSON({ result: await this.encryptOrDecrypt(collaborators.toArray(), 'encrypt') });
+      } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
     } catch (error) {
       return this.sendError(error);
     }
-
-    return this.defaultResponseJSON({ result: [] });
   }
 
   async post() {
     try {
-      let all = this.all();
       if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
-  
+      if (!(await this.authentication())) {
+        return this.defaultResponseJSON({ code: 403, message: 'authentication expired', result: { authentication: true } });
+      }
+
+      let all = this.all();
       try {
         all = await this.encryptOrDecrypt(all, 'decrypt');
       } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } } }

@@ -1,13 +1,34 @@
 <template>
 <div>
-  <app-menu />
-  <div class="content-page">
-    <loading />
-    <error />
+  <app-menu v-if="authenticated" />
+  <loading />
+  <error />
+  <div class="content-page" v-if="authenticated">
     <router-view />
   </div>
+  <app-login v-if="!authenticated" />
 </div>
 </template>
+
+<script>
+export default {
+  name: 'main',
+  data() {
+    return {
+      authenticated: false
+    }
+  },
+  mounted() {
+    this.$app.on('authentication', this.auth);
+    this.$app.emit('check-auth');
+  },
+  methods: {
+    auth(bool) {
+      this.authenticated = bool;
+    }
+  },
+}
+</script>
 
 <style lang="scss">
 html,

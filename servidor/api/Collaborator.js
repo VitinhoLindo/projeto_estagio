@@ -23,6 +23,6 @@ route.delete('/', (req, res) => {
 });
 
 module.exports = {
-  route: '/collaborators',
+  route: '/co',
   use: route
 };

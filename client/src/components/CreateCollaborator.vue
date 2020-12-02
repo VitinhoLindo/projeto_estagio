@@ -69,49 +69,32 @@ export default {
       this.locked = true;
       this.$app.emit('loading', { on: true });
 
-      let req = {
-        success: null,
-        error: null,
-        trying: 0,
-        maxTrying: 5
-      };
+      try {
+        let data = {};
 
-      let data = {};
-
-      for(let key in this.input) {
-        data[key] = this.input[key].value;
-      }
-
-      while(req.trying < req.maxTrying) {
-        try {
-          let { status, code, result, message } = await this.$app.request({
-            url: '/collaborators',
-            method: 'POST',
-            data: data,
-            encrypt: true
-          });
-
-          if (status == 'error') throw (result.error || message);
-
-          req.success = result;
-          break;
-        } catch(err) {
-          req.error = err;
-          req.trying++;
-          continue;
+        for(let key in this.input) {
+          data[key] = this.input[key].value;
         }
-      }
 
+        let { status, code, result, message } = await this.$app.request({
+          url: '/col',
+          method: 'POST',
+          data: data,
+          encrypt: true
+        });
+
+        if (status == 'error') throw (result.error || message);
+
+        return this.$emit('created-collaborator', event, result);
+      } catch(err) {
+        if (typeof err == 'object')
+          this.setError(err);
+        else
+          this.$app.emit('error', { message: err, show: true });
+      }
 
       this.locked = false;
       this.$app.emit('loading', { on: false });
-
-      if (req.success) {
-        return this.$emit('created-collaborator', event, req.success);
-      } else {
-        if (typeof req.error == 'string') return this.$app.emit('error', { message: req.error, show: true });
-        else return this.setError(req.error);
-      }
     },
     setError(error = {}) {
       for(let key in error) {

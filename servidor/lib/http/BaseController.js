@@ -157,37 +157,6 @@ class BaseController {
     }
   }
 
-  // async decrypt(value = '') {
-  //   let cache = this.app.getCache(this.request.socket.remoteAddress);
-
-  //   if (!cache || !cache.server || !cache.server.priv) {
-  //     throw `dont\'t exists server private key for ${this.request.socket.remoteAddress}`;
-  //   }
-
-  //   let decryptoBuffer = null, count = 0;
-  //   let bufferValue = Buffer.from(value, 'base64');
-
-  //   while(count < 10) {
-  //     try {
-  //       decryptoBuffer = await this.app.crypto.webcrypto.subtle.decrypt({
-  //         name: this.app.serverKeyAlgorithm,
-  //         hash: this.app.serverKeyHash,
-  //         iv: cache.ivs[count]
-  //       }, cache.server.priv, bufferValue);
-    
-  //       break;
-  //     } catch (error) { }
-  //     count++;
-  //   }
-
-  //   if (decryptoBuffer) {
-  //     return Buffer.from(decryptoBuffer, 'utf-8').toString();
-  //   }
-  //   else {
-  //     throw 'failure in decrypt data';
-  //   }
-  // }
-
   all() {
     let all = {};
 
@@ -198,8 +167,13 @@ class BaseController {
     return all;
   }
 
-  _user() {
-    return this.app.getUser(this.request);
+  async _user() {
+    return await this.request.getUser();
+  }
+
+  async authentication() {
+    let user = await this._user();
+    return !!user;
   }
 
   setStatus(code) {

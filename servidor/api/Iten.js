@@ -27,6 +27,6 @@ route.delete('/', (req, res) => {
 });
 
 module.exports = {
-  route: '/itens',
+  route: '/it',
   use: route
 };

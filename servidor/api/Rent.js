@@ -23,6 +23,6 @@ route.put('/', (req, res) => {
 });
 
 module.exports = {
-  route: '/rent',
+  route: '/re',
   use: route
 };

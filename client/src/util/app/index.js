@@ -4,6 +4,10 @@ class App extends Language {
 
   constructor() { super(); }
 
+  checkAuth() {
+    this.emit('authentication', !!this.auth);
+  }
+
   /**
    * funções que necessitam ser carregadas na inicialização do app
    * 
@@ -18,6 +22,8 @@ class App extends Language {
     await this.generateKeys()
     await this.sync({ build: true });
 
+    this.on('check-auth', () => this.checkAuth());
+
     this.window.onresize = (event) => {
       this.resize(event);
     };
@@ -27,5 +33,6 @@ class App extends Language {
 export default async function (Vue) {
   const app = new App()
   await app.build()
+
   Vue.config.globalProperties.$app = app
 }

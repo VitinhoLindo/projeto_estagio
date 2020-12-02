@@ -10,11 +10,13 @@ class MarkController extends BaseController {
   }
 
   async put() {
-    let all = this.all();
-    
     try {
       if (!this.cacheCrypto()) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } }; }
+      if (!(await this.authentication())) {
+        return this.defaultResponseJSON({ code: 403, message: 'authentication expired', result: { authentication: true } });
+      }
 
+      let all = this.all();
       try {
         all = await this.encryptOrDecrypt(all, 'decrypt');
       } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } } }
@@ -49,11 +51,13 @@ class MarkController extends BaseController {
   }
 
   async delete() {
-    let all = this.all(); 
-
     try {
       if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
-      
+      if (!(await this.authentication())) {
+        return this.defaultResponseJSON({ code: 403, message: 'authentication expired', result: { authentication: true } });
+      }
+
+      let all = this.all(); 
       try {
         all = await this.encryptOrDecrypt(all, 'decrypt');
       } catch (error) {
@@ -74,7 +78,7 @@ class MarkController extends BaseController {
         return this.defaultResponseJSON();
       } catch (error) {
         if (error.errno == 1451) {
-          throw { code: 400, message: 'not possible delete this iten' };
+          throw { code: 400, message: 'sorry not possible' };
         } else {
           throw { code: 400, message: 'bad request' };
         }
@@ -85,11 +89,14 @@ class MarkController extends BaseController {
   }
   
   async get() {
-    let all = this.all();
-
     try {
       if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
+      if (!(await this.authentication())) {
+        return this.defaultResponseJSON({ code: 403, message: 'authentication expired', result: { authentication: true } });
+      }
 
+      let all = this.all();
+      
       if (!Object.keys(all).length) {
         let marks = await Mark.instance().get();
         await marks.decrypt(this.app, 'decrypt');
@@ -128,9 +135,12 @@ class MarkController extends BaseController {
 
   async post() {
     try {
-      let all = this.all();
       if (!this.cacheCrypto()) throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } };
-  
+      if (!(await this.authentication())) {
+        return this.defaultResponseJSON({ code: 403, message: 'authentication expired', result: { authentication: true } });
+      }
+
+      let all = this.all();
       try {
         all = await this.encryptOrDecrypt(all, 'decrypt');
       } catch (error) { throw { code: 500, message: 'encrypt expired', result: { expiredCrypto: true } } }

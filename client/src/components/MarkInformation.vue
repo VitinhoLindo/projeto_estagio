@@ -92,60 +92,43 @@ export default {
     async updatedData(event) {
       this.$app.emit('loading', { on: true });
 
-      let req = {
-        success: null,
-        error: null,
-        trying: 0,
-        maxTrying: 5
-      }
+      try {
+        let updated = {};
 
-      let updated = {};
-
-      for(let key in this.processed) {
-        if (key == 'id') {
-          updated[key] = this.processed[key].value;
-        }
-        if (this.processed[key].value != this.data[key]) {
-          updated[key] = this.processed[key].value;
-        }
-      }
-
-      while(req.trying < req.maxTrying) {
-        try {
-          let { code, message, result, status } = await this.$app.request({
-            url: '/mark',
-            method: 'put',
-            data: updated,
-            encrypt: true
-          });
-
-          if (status == 'error') {
-            throw (result.error || message);
+        for(let key in this.processed) {
+          if (key == 'id') {
+            updated[key] = this.processed[key].value;
           }
-
-          req.success = result;
-          break;
-        } catch(error) {
-          req.error = error;
-          req.trying++;
-          continue;
+          if (this.processed[key].value != this.data[key]) {
+            updated[key] = this.processed[key].value;
+          }
         }
+
+        let { code, message, result, status } = await this.$app.request({
+          url: '/ma',
+          method: 'put',
+          data: updated,
+          encrypt: true
+        });
+
+        if (status == 'error') throw (result.error || message);
+
+        return this.$emit('updated', event, result);
+      } catch(error) {
+        if (typeof error == 'object') 
+          this.showError(error);
+        else 
+          this.$app.emit('error', { message: error, show: true });
       }
 
       this.$app.emit('loading', { on: false });
-      if (req.success) {
-        return this.$emit('updated', event, req.success);
-      } else {
-        if (typeof req.error == 'string') return this.$emit('error', { message: req.error, show: true });
-        else return this.showError(req.error);
-      }
     },
     async deleteData() {
       this.$app.emit('loading', { on: true });
 
       try {
         let { code, message, result, status } = await this.$app.request({
-          url: '/mark',
+          url: '/ma',
           method: 'delete',
           params: { id: this.data.id },
           encrypt: true
