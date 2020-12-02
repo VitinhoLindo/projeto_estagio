@@ -1,3 +1,4 @@
+require('dotenv').config();
 const Client = require('./client');
 
 (async () => {
@@ -5,11 +6,6 @@ const Client = require('./client');
 
   try {
     await client.connect();
-  } catch (error) {
-    console.log(error);
-  }
-
-  try {
     await client.disconnect();
   } catch (error) {
     console.log(error);
